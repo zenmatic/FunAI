@@ -1,0 +1,45 @@
+TEST:
+TODO:
+- mail/pax aspect of subsidies
+  - is industry in town or mail/pax?
+    if yes, then make transfer station
+      - make transfer station
+      - make bus station at transfer station
+      - make depot in town
+      - make bus station at target
+      - link bus stations
+    if no, then regular cargo route 
+
+- understand directions with stations
+- change strategy
+- settings (like strategies, route lenghts)
+- profit/expenses per route
+  - high/low points
+- if station already exists in town, don't build a new one
+- vehicle lost usually means the road wasn't completely built (most likely a truck was in the way at the time
+- stop trucks from bunching up
+- track income by route
+- industry to town routes (passengers, goods, food)
+- linked routes
+- map strategies
+  - 64x64 or 64x128
+    - common roads
+    - link everything through towns
+  - large map
+    - central rail
+    - trucks for transfer
+- roadbuilder strategies (use existing roads) 
+
+DONE:
+- strategy class
+  ->Start
+  ->execute task/wake
+  ->event
+  ->stop
+  ->save/load
+  ->summary
+- does data load after save?
+  yes, but on certain data types
+  https://wiki.openttd.org/AI:Save/Load
+- space out trucks
+- route memory

@@ -509,6 +509,88 @@ class BuildTrain2 extends BuildTrain {
 
 }
 
+class SimpleSuppliesStrategy extends Strategy {
+	desc = "make supply routes which are somewhat close together";
+	routes = [];
+	maxdistance = 0;
+	mindistance = 0;
+
+	constructor(min=10, max=40) {
+		maxdistance = max;
+		mindistance = min;
+	}
+
+	function Start() {
+		Wake();
+	}
+
+	function Wake() {
+		local routelist = FindSupplyRoutes();
+		if (routelist.len() > 0) {
+			local r = routelist.pop();
+			routes.append(r);
+			local cargo = r[0];
+			local producer = r[1];
+			local consumer = r[2];
+			tasks.append(BuildNamedCargoLine(null, producer, consumer, cargo));
+		}
+	}
+
+	function FindSupplyRoutes() {
+		local cargo;
+		local routelist = []; // pID, aID, distance between them
+		foreach (cargo in GenCargos()) {
+			local producing = AIIndustryList_CargoProducing(cargo);
+			local accepting = AIIndustryList_CargoAccepting(cargo);
+			local pID, aID;
+			foreach (pID,_ in producing) {
+				local ploc = AIIndustry.GetLocation(pID);
+				local acc2 = accepting;
+				foreach (aID,_ in acc2) {
+					if (pID == aID) continue;
+					local aloc = AIIndustry.GetLocation(aID);
+					local dist = AITile.GetDistanceManhattanToTile(ploc, aloc);
+					if (RouteTaken(cargo, pID, aID, dist)) {
+						continue;
+					} else if (dist >= this.mindistance && dist <= this.maxdistance) {
+						local arr = [ cargo, pID, aID, dist ];
+						routelist.append(arr);
+					}
+				}
+			}
+		}
+
+		local sortfunc = function(a,b) {
+			if (a[3] > b[3]) return 1;
+			else if (a[3] < b[3]) return -1;
+			return 0;
+		}
+
+		Debug("routelist.len() is ", routelist.len());
+		if (routelist.len() > 0) {
+			routelist.sort(sortfunc);
+			local r;
+			foreach (r in routelist) {
+				local pname = AIIndustry.GetName(r[1]);
+				local aname = AIIndustry.GetName(r[2]);
+				local dist = r[2];
+				Debug("distance from ", pname, " to ", aname, " is ", dist);
+			}
+		}
+		return routelist;
+	}
+
+	function RouteTaken(cargo, pID, aID, dist) {
+		local r;
+		foreach (r in this.routes) {
+			if (r[0] == cargo && r[1] == pID && r[2] == aID && r[3] == dist) {
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
 class BasicCoalStrategy extends Strategy {
 
 	desc = "make one route (for testing)";

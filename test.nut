@@ -757,7 +757,8 @@ class TestTransferStations extends Strategy {
 			BuildTrack(null, stationB.GetExit(), stationA.GetEntrance(),
 				[], SignalMode.FORWARD, network, BuildTrack.FOLLOW),
 			BuildRoad(loc, stationface),
-			BuildTrain2(siteA, siteB, depotA, depotB, network, fromFlags, toFlags, cargo));
+			BuildTrain2(siteA, siteB, depotA, depotB, network, fromFlags, toFlags, cargo)
+		]);
 		RunTasks();
 	}
 

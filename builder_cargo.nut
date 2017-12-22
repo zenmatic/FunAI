@@ -231,18 +231,18 @@ class BuildCargoLine extends Task {
 	function FindIndustryStationSite(industry, producing, stationRotation, destination) {
 		local location = AIIndustry.GetLocation(industry);
 		local area = producing ? AITileList_IndustryProducing(industry, RAIL_STATION_RADIUS) : AITileList_IndustryAccepting(industry, RAIL_STATION_RADIUS);
-		
+
 		// room for a station
 		area.Valuate(IsBuildableRectangle, stationRotation, [0, -1], [1, CARGO_STATION_LENGTH + 1], true);
 		area.KeepValue(1);
 		
 		// pick the tile farthest from the destination for increased profit
-		area.Valuate(AITile.GetDistanceManhattanToTile, destination);
-		area.KeepTop(1);
+		//area.Valuate(AITile.GetDistanceManhattanToTile, destination);
+		//area.KeepTop(10);
 		
 		// pick the tile closest to the industry for looks
-		//area.Valuate(AITile.GetDistanceManhattanToTile, location);
-		//area.KeepBottom(1);
+		area.Valuate(AITile.GetDistanceManhattanToTile, location);
+		area.KeepBottom(1);
 		
 		return area.IsEmpty() ? null : area.Begin();
 	}

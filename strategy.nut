@@ -62,6 +62,96 @@ class Strategy {
 
 }
 
+class TestOilToTown extends Strategy {
+	desc = "make oil route to nearest town";
+
+	function Start() {
+		local cargoIDs = GenCargos();
+		local cargo = cargoIDs.OIL_;
+		local producing = AIIndustryList_CargoProducing(cargo);
+		producing.Valuate(AIIndustry.IsBuiltOnWater);
+		producing.KeepValue(1);
+		Debug("len is ", producing.Count());
+		local oilrig = producing.Begin();
+		Debug("name is ", AIIndustry.GetName(oilrig));
+		local location = AIIndustry.GetLocation(oilrig);
+
+		local towns = AITownList();
+		towns.Valuate(AITile.GetDistanceManhattanToTile, location);
+		towns.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+		local town = towns.Begin();
+		Debug("nearest town is ", AITown.GetName(town));
+
+		local tiles = AITileList();
+		SafeAddRectangle(tiles, location, 40);
+		tiles.Valuate(AITile.IsCoastTile);
+		tiles.KeepValue(1);
+		local tile;
+		local ret = false;
+		local dock_location;
+		foreach (tile,_ in tiles) {
+			try {
+				ret = AIMarine.BuildDock(tile, AIStation.STATION_NEW);
+				if (ret) {
+					dock_location = tile;
+					break;
+				}
+			} catch (e) {
+				Debug("typeof e is ", typeof(e));
+			}
+		}
+
+		if (!ret) return;
+
+		local tiles = AITileList();
+		SafeAddRectangle(tiles, location, 20);
+		tiles.Valuate(AITile.IsWaterTile);
+		tiles.KeepValue(1);
+		ret = false;
+		local depot;
+		foreach (tile,_ in tiles) {
+			if (ret) break;
+			local area = AITileList();
+			SafeAddRectangle(area, tile, 1);
+			try {
+				local front;
+				foreach (front,_ in area) {
+					ret = AIMarine.BuildWaterDepot(tile, front);
+					if (ret) {
+						Debug("built at ", tile);
+						depot = tile;
+						break;
+					}
+				}
+			} catch (e) {
+				Debug("typeof e is ", typeof(e));
+			}
+		}
+
+		if (!ret) return;
+
+		Debug("depot is ", depot);
+
+		local ships = AIEngineList(AIVehicle.VT_WATER);
+		Debug("veh len=", ships.Count());
+		ships.Valuate(AIEngine.IsBuildable);
+		ships.KeepValue(1);
+		ships.Valuate(AIEngine.CanRefitCargo, cargo);
+		ships.KeepValue(1);
+
+		Debug("ship len=", ships.Count());
+		local ship = ships.Begin();
+		local shipID = AIVehicle.BuildVehicle(depot, ship);
+		AIVehicle.RefitVehicle(shipID, cargo);
+
+		local flags = AIOrder.OF_NONE;
+		AIOrder.AppendOrder(shipID, location, flags);
+		AIOrder.AppendOrder(shipID, dock_location, flags);
+		AIOrder.AppendOrder(shipID, depot, flags);
+		AIVehicle.StartStopVehicle(shipID);
+	}
+}
+
 class BuildTransferCargoLine extends BuildCargoLine {
 	producer_info = null;
 	consumer_info = null;
@@ -515,7 +605,7 @@ class SimpleSuppliesStrategy extends Strategy {
 	maxdistance = 0;
 	mindistance = 0;
 
-	constructor(min=10, max=40) {
+	constructor(min=20, max=50) {
 		maxdistance = max;
 		mindistance = min;
 	}
@@ -912,7 +1002,11 @@ class SubStrategy extends Strategy {
 			id = AISubsidy.GetDestinationIndex(subID),
 			type = AISubsidy.GetDestinationType(subID),
 		}
-		tasks.append(BuildTransferCargoLine(null, producer_info, consumer_info, cargo));
+		
+		if (AIIndustry.IsBuiltOnWater(producer_info.id)) {
+		} else {
+			tasks.append(BuildTransferCargoLine(null, producer_info, consumer_info, cargo));
+		}
 
 		/*
 		local producer = AISubsidy.GetSourceIndex(subID);

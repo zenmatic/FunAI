@@ -74,81 +74,26 @@ class TestOilToTown extends Strategy {
 		Debug("len is ", producing.Count());
 		local oilrig = producing.Begin();
 		Debug("name is ", AIIndustry.GetName(oilrig));
-		local location = AIIndustry.GetLocation(oilrig);
+		local oilrig_loc = AIIndustry.GetLocation(oilrig);
 
 		local towns = AITownList();
-		towns.Valuate(AITile.GetDistanceManhattanToTile, location);
+		towns.Valuate(AITown.GetDistanceManhattanToTile, oilrig_loc);
 		towns.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
 		local town = towns.Begin();
 		Debug("nearest town is ", AITown.GetName(town));
+		local town_loc = AITown.GetLocation(town);
 
-		local tiles = AITileList();
-		SafeAddRectangle(tiles, location, 40);
-		tiles.Valuate(AITile.IsCoastTile);
-		tiles.KeepValue(1);
-		local tile;
-		local ret = false;
-		local dock_location;
-		foreach (tile,_ in tiles) {
-			try {
-				ret = AIMarine.BuildDock(tile, AIStation.STATION_NEW);
-				if (ret) {
-					dock_location = tile;
-					break;
-				}
-			} catch (e) {
-				Debug("typeof e is ", typeof(e));
-			}
-		}
+		local obj_depot = BuildWaterDepotBetween(null, town_loc, oilrig_loc);
+		local obj_dock = BuildDock(null, town_loc);
+		tasks = [
+			obj_depot,
+			obj_dock,
+		];
+		RunTasks();
+		tasks = [
+			BuildShipRoute(null, obj_depot.depot, oilrig_loc, obj_dock.dock, cargo),
+		];
 
-		if (!ret) return;
-
-		local tiles = AITileList();
-		SafeAddRectangle(tiles, location, 20);
-		tiles.Valuate(AITile.IsWaterTile);
-		tiles.KeepValue(1);
-		ret = false;
-		local depot;
-		foreach (tile,_ in tiles) {
-			if (ret) break;
-			local area = AITileList();
-			SafeAddRectangle(area, tile, 1);
-			try {
-				local front;
-				foreach (front,_ in area) {
-					ret = AIMarine.BuildWaterDepot(tile, front);
-					if (ret) {
-						Debug("built at ", tile);
-						depot = tile;
-						break;
-					}
-				}
-			} catch (e) {
-				Debug("typeof e is ", typeof(e));
-			}
-		}
-
-		if (!ret) return;
-
-		Debug("depot is ", depot);
-
-		local ships = AIEngineList(AIVehicle.VT_WATER);
-		Debug("veh len=", ships.Count());
-		ships.Valuate(AIEngine.IsBuildable);
-		ships.KeepValue(1);
-		ships.Valuate(AIEngine.CanRefitCargo, cargo);
-		ships.KeepValue(1);
-
-		Debug("ship len=", ships.Count());
-		local ship = ships.Begin();
-		local shipID = AIVehicle.BuildVehicle(depot, ship);
-		AIVehicle.RefitVehicle(shipID, cargo);
-
-		local flags = AIOrder.OF_NONE;
-		AIOrder.AppendOrder(shipID, location, flags);
-		AIOrder.AppendOrder(shipID, dock_location, flags);
-		AIOrder.AppendOrder(shipID, depot, flags);
-		AIVehicle.StartStopVehicle(shipID);
 	}
 }
 

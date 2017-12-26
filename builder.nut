@@ -12,6 +12,7 @@ require("builder_road.nut");
 require("builder_stations.nut");
 require("builder_track.nut");
 require("builder_trains.nut");
+require("builder_ships.nut");
 
 /**
  * Returns the proper direction for a station at a, with the tracks heading to b.

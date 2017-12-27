@@ -43,7 +43,7 @@ class NeedMoneyException {
 class Task {
 	
 	static MAX_ERR_UNKNOWN = 10;
-	static MAX_RETRY = 50;
+	static MAX_RETRY = 5;
 	
 	errUnknownCount = 0;
 	errRetryCount = 0;

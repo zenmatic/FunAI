@@ -1,3 +1,67 @@
+class BuildCoalLine extends BuildNamedCargoLine {
+
+	cargo = null;
+
+	constructor(parentTask=null, cargo=null) {
+		Task.constructor(parentTask, null);
+		this.cargo = cargo;
+		Debug("cargo is ", cargo);
+	}
+
+	function _tostring() {
+		return "BuildCoalLine";
+	}
+	
+	function Run() {
+		local prodlist = AIIndustryList_CargoProducing(this.cargo);
+		local acclist = AIIndustryList_CargoAccepting(this.cargo);
+		Debug("prodlist count=" + prodlist.Count());
+		local producer = prodlist.Begin();
+		Debug("acclist count=" + acclist.Count());
+		local consumer = acclist.Begin();
+		local r = CargoRoute(producer, consumer, this.cargo);
+		subtasks = [
+			BuildNamedCargoLine(this, producer, consumer, this.cargo),
+		];
+
+		RunSubtasks();
+	}
+}
+
+class TestOilToTown extends Strategy {
+	desc = "make oil route to nearest town";
+
+	function Start() {
+		local cargoIDs = GenCargos();
+		local cargo = cargoIDs.OIL_;
+		local producing = AIIndustryList_CargoProducing(cargo);
+		producing.Valuate(AIIndustry.IsBuiltOnWater);
+		producing.KeepValue(1);
+		Debug("len is ", producing.Count());
+		local oilrig = producing.Begin();
+		Debug("name is ", AIIndustry.GetName(oilrig));
+		local oilrig_loc = AIIndustry.GetLocation(oilrig);
+
+		local towns = AITownList();
+		towns.Valuate(AITown.GetDistanceManhattanToTile, oilrig_loc);
+		towns.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+		local town = towns.Begin();
+		Debug("nearest town is ", AITown.GetName(town));
+		local town_loc = AITown.GetLocation(town);
+
+		local obj_depot = BuildWaterDepotBetween(null, town_loc, oilrig_loc);
+		local obj_dock = BuildDock(null, town_loc);
+		tasks = [
+			obj_depot,
+			obj_dock,
+		];
+		RunTasks();
+		tasks = [
+			BuildShipRoute(null, obj_depot.depot, oilrig_loc, obj_dock.dock, cargo),
+		];
+
+	}
+}
 
 class TestIndustryInTown extends Strategy {
 	function Start() {

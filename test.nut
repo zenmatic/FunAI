@@ -2,13 +2,18 @@ class TestTruckRoute extends SimpleSuppliesStrategy {
 	desc = "test a truck route";
 
 	function Start() {
+		Wake();
+	}
+
+	function Wake() {
 		local routelist = FindSupplyRoutes();
 		if (routelist.len() > 0) {
 			local r = routelist.pop();
 			routes.append(r);
 			local cargo = r[0];
-			local producer = r[1];
-			local consumer = r[2];
+			local producer = AIIndustry.GetLocation(r[1]);
+			local consumer = AIIndustry.GetLocation(r[2]);
+			Debug("prod=", AIIndustry.GetName(r[1]), " cons=", AIIndustry.GetName(r[2]));
 			tasks.append(BuildTruckRoute(null, producer, consumer, cargo));
 		}
 	}

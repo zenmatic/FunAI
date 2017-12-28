@@ -40,7 +40,7 @@ function FindIndustryStation(id) {
 }
 
 // ttype AITile.TRANSPORT_ROAD, TRANSPORT_RAIL, TRANSPORT_WATER, TRANSPORT_AIR, 
-function FindClosestDepot(location, ttype, distance=20) {
+function FindClosestDepot(location, ttype=AITile.TRANSPORT_ROAD, distance=20) {
 	local dlist = AIDepotList(ttype);
 	dlist.Valuate(AITile.GetDistanceManhattanToTile, location);
 	dlist.KeepBelowValue(distance);

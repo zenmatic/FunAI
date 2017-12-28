@@ -1,3 +1,19 @@
+class TestTruckRoute extends SimpleSuppliesStrategy {
+	desc = "test a truck route";
+
+	function Start() {
+		local routelist = FindSupplyRoutes();
+		if (routelist.len() > 0) {
+			local r = routelist.pop();
+			routes.append(r);
+			local cargo = r[0];
+			local producer = r[1];
+			local consumer = r[2];
+			tasks.append(BuildTruckRoute(null, producer, consumer, cargo));
+		}
+	}
+}
+
 class BuildCoalLine extends BuildNamedCargoLine {
 
 	cargo = null;

@@ -1,3 +1,56 @@
+function FindIndustryStation(id) {
+	Debug("FIND station location for ", info.name, " at ", info.loc);
+	local first, tiles;
+	local itype = AIIndustry.GetIndustryType(info.id);
+	local prodlist = AIIndustryType.GetProducedCargo(itype);
+	local acclist = AIIndustryType.GetAcceptedCargo(itype);
+
+	local radius = 10;
+	if (prodlist.HasItem(this.cargo)) {
+		tiles = AITileList_IndustryProducing(info.id, radius);
+		Debug(info.name, " produces ", AICargo.GetCargoLabel(this.cargo));
+	} else if (acclist.HasItem(this.cargo)) {
+		tiles = AITileList_IndustryAccepting(info.id, radius);
+		Debug(info.name, " accepts ", AICargo.GetCargoLabel(this.cargo));
+	}
+
+	Debug("AITileList() count=", tiles.Count());
+	//SafeAddRectangle(tiles, info.loc, radius);
+	//Debug("SafeAddRectangle count=", tiles.Count());
+	tiles.Valuate(AITile.IsBuildableRectangle, 2, 2);
+	tiles.KeepValue(1);
+	Debug("IsBuildableRectangle", tiles.Count());
+
+	tiles.Valuate(AITile.GetSlope);
+	tiles.KeepValue(AITile.SLOPE_FLAT);
+	Debug("AITile.GetSlope", tiles.Count());
+
+	tiles.Valuate(AITile.GetDistanceManhattanToTile, info.loc);
+	tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+
+	first = tiles.Begin();
+	/*
+	local t;
+	for (t = first; !tiles.IsEnd(); t = tiles.Next())
+	{
+		//AISign.BuildSign(t, "X");
+	}
+	*/
+	return first;
+}
+
+// ttype AITile.TRANSPORT_ROAD, TRANSPORT_RAIL, TRANSPORT_WATER, TRANSPORT_AIR, 
+function FindClosestDepot(location, ttype, distance=20) {
+	local dlist = AIDepotList(ttype);
+	dlist.Valuate(AITile.GetDistanceManhattanToTile, location);
+	dlist.KeepBelowValue(distance);
+	dlist.Sort(AIList.SORT_BY_VALUE, AIList.SORT_DESCENDING);
+	if (dlist.Count() > 0) {
+		return dlist.Begin();
+	}
+	return null;
+}
+
 function IsIndustryInTown(industry) {
 	if (!AIIndustry.IsValidIndustry(industry)) {
 		Debug("industry ", industry, " not valid");

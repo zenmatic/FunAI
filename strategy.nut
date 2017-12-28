@@ -385,7 +385,7 @@ class ChooStrategy extends Strategy {
 class SubStrategy extends Strategy {
 
 	// if close, use a bus
-	BUS_DISTANCE = 100;
+	BUS_DISTANCE = 80;
 
 	desc = "grab all the subsidies";
 	subsidies = {
@@ -581,7 +581,7 @@ class SubStrategy extends Strategy {
 			RunTasks();
 			tasks.append(BuildShipRoute(null, obj_depot.depot, producer_info.location, obj_dock.dock, cargo));
 		} else if (distance <= BUS_DISTANCE) {
-			tasks.append(BuildTruckRoute(null, producer_info, consumer_info));
+			tasks.append(BuildTruckRoute(null, producer_info.location, consumer_info.location, cargo));
 		} else {
 			tasks.append(BuildNamedCargoLine(null, producer_info.id, consumer_info.id, cargo));
 		}

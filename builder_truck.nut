@@ -23,21 +23,135 @@ class BuildTruckRoute extends Task {
 
 		local depot = FindClosestDepot(producer, AITile.TRANSPORT_ROAD);
 		if (depot == null) {
-			subtasks.append(BuildTruckDepot(this, producer));
+			local d = BuildTruckDepot(this, producer);
+			d.Run();
+			depot = d.depot;
+			if (depot == null) {
+				throw TaskFailedException("unable to build depot");
+			}
 		}
+		Debug("depot is ", depot);
+		local pobj = BuildTruckStation(this, producer);
+		local cobj = BuildTruckStation(this, consumer);
 		subtasks.extend([
-			BuildTruckStation(this, producer),
-			BuildTruckStation(this, consumer),
-			BuildRoad(this, producer, consumer),
-			BuildRoad(this, producer, depot),
-			BuildTruck(this, depot, producer, consumer, cargo),
+			pobj,
+			cobj,
 		]);
+		RunSubtasks();
+
+		subtasks.extend([
+			BuildTruckRoad(this, pobj.station, depot),
+			BuildTruckRoad(this, cobj.station, depot),
+			BuildTruck(this, depot, pobj.station, cobj.station, cargo),
+		]);
+		RunSubtasks();
 	}
+}
+
+class BuildTruckRoad extends Task {
+	location1 = null;
+	location2 = null;
+	MAX_TRIES = 100;
+
+	constructor(parentTask, location1, location2) {
+		Task.constructor(parentTask, null);
+		this.location1 = location1;
+		this.location2 = location2;
+		//this.location1 = AIRoad.GetRoadStationFrontTile(location1);
+		//this.location2 = AIRoad.GetRoadStationFrontTile(location2);
+	}
+
+	function _tostring() {
+		return "BuildTruckRoad";
+	}
+
+	function Run() {
+		local a_loc = location1;
+		local b_loc = location2;
+		local s_tick = AIController.GetTick();
+		local parcount = 0;
+
+		AISign.BuildSign(a_loc, "A");
+		AISign.BuildSign(a_loc, "B");
+
+		AIRoad.SetCurrentRoadType(AIRoad.ROADTYPE_ROAD);
+		local pathfinder = RoadPathFinder();
+		/* defaults
+		pathfinder.cost.max_cost = 2000000000;
+		pathfinder.cost.tile = 100;
+		pathfinder.cost.turn = 100;
+		pathfinder.cost.slope = 200;
+		pathfinder.cost.no_existing_road = 40;
+		pathfinder.cost.bridge_per_tile = 150;
+		pathfinder.cost.tunnel_per_tile = 120;
+		pathfinder.cost.coast = 20;
+		pathfinder.cost.max_bridge_length = 10;
+		pathfinder.cost.max_tunnel_length = 20;
+		*/
+		pathfinder.cost.no_existing_road = 400;
+		Debug("build path from " + a_loc + " to " + b_loc);
+		pathfinder.InitializePath([a_loc], [b_loc]);
+
+		local try = 0;
+		local path = false;
+		while (path == false) {
+			path = pathfinder.FindPath(100);
+			if (++try >= MAX_TRIES) {
+				throw TaskFailedException("pathfinder couldn't find path after " + MAX_TRIES + " tries");
+			}
+			AIController.Sleep(1);
+		}
+		if (path == null) {
+			throw TaskFailedException("pathfinder.FindPath return null, no path found");
+		}
+		while (path != null) {
+		  local par = path.GetParent();
+		  if (par != null) {
+			parcount++;
+			local last_node = path.GetTile();
+			if (AIMap.DistanceManhattan(path.GetTile(), par.GetTile()) == 1 ) {
+			  if (!AIRoad.BuildRoad(path.GetTile(), par.GetTile())) {
+				/* An error occured while building a piece of road. TODO: handle it.
+				 * Note that is can also be the case that the road was already build. */
+			  }
+			} else {
+			  /* Build a bridge or tunnel. */
+			  if (!AIBridge.IsBridgeTile(path.GetTile()) && !AITunnel.IsTunnelTile(path.GetTile())) {
+				/* If it was a road tile, demolish it first. Do this to work around expended roadbits. */
+				if (AIRoad.IsRoadTile(path.GetTile())) AITile.DemolishTile(path.GetTile());
+				if (AITunnel.GetOtherTunnelEnd(path.GetTile()) == par.GetTile()) {
+				  if (!AITunnel.BuildTunnel(AIVehicle.VT_ROAD, path.GetTile())) {
+					/* An error occured while building a tunnel. TODO: handle it. */
+				  }
+				} else {
+				  local bridge_list = AIBridgeList_Length(AIMap.DistanceManhattan(path.GetTile(), par.GetTile()) + 1);
+				  bridge_list.Valuate(AIBridge.GetMaxSpeed);
+				  bridge_list.Sort(AIList.SORT_BY_VALUE, false);
+				  if (!AIBridge.BuildBridge(AIVehicle.VT_ROAD, bridge_list.Begin(), path.GetTile(), par.GetTile())) {
+					/* An error occured while building a bridge. TODO: handle it. */
+				  }
+				}
+			  }
+			}
+		  }
+		  path = par;
+		}
+		local e_tick = AIController.GetTick();
+		if (parcount > 0) {
+			Debug("pathfinder took " + (e_tick - s_tick) + " secs to complete");
+			return true;
+		} else {
+			Debug("pathfinder didn't complete");
+			return false;
+		}
+	}
+
 }
 
 class BuildTruckStation extends Task {
 	location = null;
 	ttype = null; // transport type
+	station = null;
 
 	// AIRoad.ROADVEHTYPE_TRUCK or AIRoad.ROADVEHTYPE_BUS
 	constructor(parentTask, location, ttype = AIRoad.ROADVEHTYPE_TRUCK) {
@@ -51,17 +165,34 @@ class BuildTruckStation extends Task {
 	}
 
 	function Run() {
+
+		local tiles = AITileList();
+		SafeAddRectangle(tiles, location, 1);
+		tiles.RemoveValue(location);
+		tiles.Valuate(AITile.GetSlope);
+		tiles.KeepValue(AITile.SLOPE_FLAT);
+		tiles.Valuate(AITile.IsBuildable)
+		tiles.KeepValue(1);
+
 		//local stationtype = AIStation.STATION_NEW;
 		local stationtype = AIStation.STATION_JOIN_ADJACENT;
-		local area = AITileList();
-		SafeAddRectangle(area, location, 1);
-		area.RemoveValue(location);
-		local ret = AIRoad.BuildRoadStation(loc, loc+1, stype, stationtype); 
-		Debug("build stop at ", loc);
-		if (ret == false) { PrintError() }
-		Debug("ret=", ret);
-		return ret;
-
+		local tile, front;
+		foreach (tile,_ in tiles) {
+			if (!AITile.IsBuildableRectangle(tile, 1, 1)) { continue }
+			local area = AITileList();
+			SafeAddRectangle(area, tile, 1);
+			area.RemoveValue(tile);
+			area.Valuate(AITile.GetSlope);
+			area.KeepValue(AITile.SLOPE_FLAT);
+			area.Valuate(AITile.IsBuildable)
+			area.KeepValue(1);
+			foreach (front,_ in area) {
+				if (AIRoad.BuildRoadStation(tile, front, this.ttype, stationtype)) {
+					this.station = tile;
+					return;
+				}
+			}
+		}
 	}
 
 }
@@ -82,10 +213,11 @@ class BuildTruckDepot extends Task {
 
 	location = null;
 	depot = null;
+	RADIUS = 15;
 
-	constructor(parentTask, l) {
+	constructor(parentTask, location) {
 		Task.constructor(parentTask, null);
-		location = l;
+		this.location = location;
 	}
 	
 	function _tostring() {
@@ -93,6 +225,38 @@ class BuildTruckDepot extends Task {
 	}
 
 	function Run() {
+
+		local centertile = this.location;
+		local tiles = AITileList();
+		SafeAddRectangle(tiles, centertile, this.RADIUS);
+		tiles.RemoveValue(centertile);
+
+		/* find all the roads */
+		tiles.Valuate(AIRoad.IsRoadTile);
+		tiles.KeepValue(1);
+
+		tiles.Valuate(AITile.GetDistanceManhattanToTile, centertile);
+		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+
+		/* find all flat, buildable spots along the road */
+		local t, sur, s;
+		foreach (t,_ in tiles) {
+			sur = AITileList();
+			SafeAddRectangle(sur, t, 1);
+			sur.Valuate(AITile.GetSlope);
+			sur.KeepValue(AITile.SLOPE_FLAT);
+
+			sur.Valuate(AITile.IsBuildable);
+			sur.KeepValue(1);
+
+			foreach (s,_ in sur) {
+				if (AIRoad.BuildRoadDepot(s, t)) {
+					AIRoad.BuildRoad(s, t);
+					this.depot = s;
+					return;
+				}
+			}
+		}
 	}
 
 }

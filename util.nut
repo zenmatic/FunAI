@@ -383,7 +383,6 @@ function GetCargoID(cargoClass) {
 	local candidate = -1;
 	local i;
 	foreach (i,j in list) {
-		Debug("i is ", i, " j is ", j);
 		if (AICargo.HasCargoClass(i, cargoClass)) {
 			candidate = i;
 		}

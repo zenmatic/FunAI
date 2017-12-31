@@ -38,115 +38,125 @@ class BuildTruckRoute extends Task {
 			cobj,
 		]);
 		RunSubtasks();
+		Debug("pobj.station is ", pobj.station, " cobj.station is ", cobj.station);
+		if (pobj.station == null) {
+			throw TaskFailedException("pobj.station is null");
+		} else if (cobj.station == null) {
+			throw TaskFailedException("cobj.station is null");
+		}
 
 		subtasks.extend([
 			BuildTruckRoad(this, pobj.station, depot),
-			BuildTruckRoad(this, cobj.station, depot),
+			BuildTruckRoad(this, pobj.station, cobj.station),
 			BuildTruck(this, depot, pobj.station, cobj.station, cargo),
 		]);
 		RunSubtasks();
 	}
 }
 
-class BuildTruckRoad extends Task {
-	location1 = null;
-	location2 = null;
-	MAX_TRIES = 100;
-
-	constructor(parentTask, location1, location2) {
-		Task.constructor(parentTask, null);
-		this.location1 = location1;
-		this.location2 = location2;
-		//this.location1 = AIRoad.GetRoadStationFrontTile(location1);
-		//this.location2 = AIRoad.GetRoadStationFrontTile(location2);
-	}
-
-	function _tostring() {
-		return "BuildTruckRoad";
-	}
-
-	function Run() {
-		local a_loc = location1;
-		local b_loc = location2;
-		local s_tick = AIController.GetTick();
-		local parcount = 0;
-
-		AISign.BuildSign(a_loc, "A");
-		AISign.BuildSign(a_loc, "B");
-
-		AIRoad.SetCurrentRoadType(AIRoad.ROADTYPE_ROAD);
-		local pathfinder = RoadPathFinder();
-		/* defaults
-		pathfinder.cost.max_cost = 2000000000;
-		pathfinder.cost.tile = 100;
-		pathfinder.cost.turn = 100;
-		pathfinder.cost.slope = 200;
-		pathfinder.cost.no_existing_road = 40;
-		pathfinder.cost.bridge_per_tile = 150;
-		pathfinder.cost.tunnel_per_tile = 120;
-		pathfinder.cost.coast = 20;
-		pathfinder.cost.max_bridge_length = 10;
-		pathfinder.cost.max_tunnel_length = 20;
-		*/
-		pathfinder.cost.no_existing_road = 400;
-		Debug("build path from " + a_loc + " to " + b_loc);
-		pathfinder.InitializePath([a_loc], [b_loc]);
-
-		local try = 0;
-		local path = false;
-		while (path == false) {
-			path = pathfinder.FindPath(100);
-			if (++try >= MAX_TRIES) {
-				throw TaskFailedException("pathfinder couldn't find path after " + MAX_TRIES + " tries");
-			}
-			AIController.Sleep(1);
-		}
-		if (path == null) {
-			throw TaskFailedException("pathfinder.FindPath return null, no path found");
-		}
-		while (path != null) {
-		  local par = path.GetParent();
-		  if (par != null) {
-			parcount++;
-			local last_node = path.GetTile();
-			if (AIMap.DistanceManhattan(path.GetTile(), par.GetTile()) == 1 ) {
-			  if (!AIRoad.BuildRoad(path.GetTile(), par.GetTile())) {
-				/* An error occured while building a piece of road. TODO: handle it.
-				 * Note that is can also be the case that the road was already build. */
-			  }
-			} else {
-			  /* Build a bridge or tunnel. */
-			  if (!AIBridge.IsBridgeTile(path.GetTile()) && !AITunnel.IsTunnelTile(path.GetTile())) {
-				/* If it was a road tile, demolish it first. Do this to work around expended roadbits. */
-				if (AIRoad.IsRoadTile(path.GetTile())) AITile.DemolishTile(path.GetTile());
-				if (AITunnel.GetOtherTunnelEnd(path.GetTile()) == par.GetTile()) {
-				  if (!AITunnel.BuildTunnel(AIVehicle.VT_ROAD, path.GetTile())) {
-					/* An error occured while building a tunnel. TODO: handle it. */
-				  }
-				} else {
-				  local bridge_list = AIBridgeList_Length(AIMap.DistanceManhattan(path.GetTile(), par.GetTile()) + 1);
-				  bridge_list.Valuate(AIBridge.GetMaxSpeed);
-				  bridge_list.Sort(AIList.SORT_BY_VALUE, false);
-				  if (!AIBridge.BuildBridge(AIVehicle.VT_ROAD, bridge_list.Begin(), path.GetTile(), par.GetTile())) {
-					/* An error occured while building a bridge. TODO: handle it. */
-				  }
-				}
-			  }
-			}
-		  }
-		  path = par;
-		}
-		local e_tick = AIController.GetTick();
-		if (parcount > 0) {
-			Debug("pathfinder took " + (e_tick - s_tick) + " secs to complete");
-			return true;
-		} else {
-			Debug("pathfinder didn't complete");
-			return false;
-		}
-	}
-
-}
+//class BuildTruckRoad extends Task {
+//	location1 = null;
+//	location2 = null;
+//	MAX_TRIES = 100;
+//
+//	constructor(parentTask, loc1, loc2) {
+//		Task.constructor(parentTask, null);
+//		this.location1 = loc1;
+//		this.location2 = loc2;
+//	}
+//
+//	function _tostring() {
+//		return "BuildTruckRoad";
+//	}
+//
+//	function Run() {
+//		local a_loc = location1;
+//		local b_loc = location2;
+//		local dist = AIMap.DistanceManhattan(a_loc, b_loc);
+//		local s_tick = AIController.GetTick();
+//		local parcount = 0;
+//
+//		AISign.BuildSign(a_loc, "A");
+//		AISign.BuildSign(b_loc, "B");
+//
+//		AIRoad.SetCurrentRoadType(AIRoad.ROADTYPE_ROAD);
+//		//local pathfinder = RoadPathFinder();
+//		/* defaults
+//		pathfinder.cost.max_cost = 2000000000;
+//		pathfinder.cost.tile = 100;
+//		pathfinder.cost.turn = 100;
+//		pathfinder.cost.slope = 200;
+//		pathfinder.cost.no_existing_road = 40;
+//		pathfinder.cost.bridge_per_tile = 150;
+//		pathfinder.cost.tunnel_per_tile = 120;
+//		pathfinder.cost.coast = 20;
+//		pathfinder.cost.max_bridge_length = 10;
+//		pathfinder.cost.max_tunnel_length = 20;
+//		*/
+//		local pathfinder = Road();
+//		pathfinder.cost.max_bridge_length = 4;
+//		pathfinder.cost.max_tunnel_length = 4;
+//		pathfinder.cost.max_cost = pathfinder.cost.tile * 4 * dist;
+//		//pathfinder.cost.no_existing_road = 400;
+//		Debug("build path from " + a_loc + " to " + b_loc);
+//		pathfinder.InitializePath([a_loc], [b_loc]);
+//
+//		local tries = 0;
+//		local path = false;
+//		while (path == false) {
+//			if (++tries >= MAX_TRIES) {
+//				throw TaskFailedException("pathfinder couldn't find path after " + tries + " tries");
+//			}
+//			//path = pathfinder.FindPath(100);
+//			path = pathfinder.FindPath(dist * 3 * TICKS_PER_DAY);
+//			AIController.Sleep(1);
+//		}
+//		if (path == null) {
+//			throw TaskFailedException("pathfinder.FindPath return null, no path found");
+//		}
+//		while (path != null) {
+//		  local par = path.GetParent();
+//		  if (par != null) {
+//			parcount++;
+//			local last_node = path.GetTile();
+//			if (AIMap.DistanceManhattan(path.GetTile(), par.GetTile()) == 1 ) {
+//			  if (!AIRoad.BuildRoad(path.GetTile(), par.GetTile())) {
+//				/* An error occured while building a piece of road. TODO: handle it.
+//				 * Note that is can also be the case that the road was already build. */
+//			  }
+//			} else {
+//			  /* Build a bridge or tunnel. */
+//			  if (!AIBridge.IsBridgeTile(path.GetTile()) && !AITunnel.IsTunnelTile(path.GetTile())) {
+//				/* If it was a road tile, demolish it first. Do this to work around expended roadbits. */
+//				if (AIRoad.IsRoadTile(path.GetTile())) AITile.DemolishTile(path.GetTile());
+//				if (AITunnel.GetOtherTunnelEnd(path.GetTile()) == par.GetTile()) {
+//				  if (!AITunnel.BuildTunnel(AIVehicle.VT_ROAD, path.GetTile())) {
+//					/* An error occured while building a tunnel. TODO: handle it. */
+//				  }
+//				} else {
+//				  local bridge_list = AIBridgeList_Length(AIMap.DistanceManhattan(path.GetTile(), par.GetTile()) + 1);
+//				  bridge_list.Valuate(AIBridge.GetMaxSpeed);
+//				  bridge_list.Sort(AIList.SORT_BY_VALUE, false);
+//				  if (!AIBridge.BuildBridge(AIVehicle.VT_ROAD, bridge_list.Begin(), path.GetTile(), par.GetTile())) {
+//					/* An error occured while building a bridge. TODO: handle it. */
+//				  }
+//				}
+//			  }
+//			}
+//		  }
+//		  path = par;
+//		}
+//		local e_tick = AIController.GetTick();
+//		if (parcount > 0) {
+//			Debug("pathfinder took " + (e_tick - s_tick) + " secs to complete");
+//			return true;
+//		} else {
+//			Debug("pathfinder didn't complete");
+//			return false;
+//		}
+//	}
+//
+//}
 
 class BuildTruckStation extends Task {
 	location = null;
@@ -195,18 +205,6 @@ class BuildTruckStation extends Task {
 		}
 	}
 
-}
-
-class BuildBusStation extends Task {
-
-	// AIRoad.ROADVEHTYPE_TRUCK or AIRoad.ROADVEHTYPE_BUS
-	constructor(parentTask, location, ttype = AIRoad.ROADVEHTYPE_BUS) {
-		BuildTruckStation.constructor(parentTask, location, ttype);
-	}
-	
-	function _tostring() {
-		return "BuildBusStation";
-	}
 }
 
 class BuildTruckDepot extends Task {

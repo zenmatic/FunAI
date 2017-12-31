@@ -89,3 +89,27 @@ class BuildRoad extends Task {
 	}
 	
 }
+
+class BuildTruckRoad extends BuildRoad {
+	location1 = null;
+	location2 = null;
+	path = null;
+
+	constructor(parentTask, loc1, loc2) {
+		Task.constructor(parentTask);
+		this.location1 = loc1;
+		this.location2 = loc2;
+	}
+
+	function _tostring() {
+		return "BuildTruckRoad";
+	}
+
+	function Run() {
+		SetConstructionSign(location1, this);
+		if (!path) path = FindPath(location1, location2);
+		ClearSecondarySign();
+		if (!path) throw TaskFailedException("no path");
+		BuildPath(path);
+	}
+}

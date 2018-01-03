@@ -94,7 +94,7 @@ class FunAI extends AIController
 		GenCargos();
 
 		this.strategies = [
-			//MaxLoanStrategy(),
+			MaxLoanStrategy(),
 			//TestStuff(),
 			//TestExpandingStations(),
 			//TestIndustryInTown(),
@@ -105,10 +105,11 @@ class FunAI extends AIController
 			//TestTransferStations(),
 			//TestOilToTown(),
 			//TransferStrategy(),
-			TestTruckRoute(10),
+			//TestTruckRoute(10),
 			//SimpleSuppliesStrategy(),
 			//SubStrategy(),
-			//ZeroLoanStrategy(),
+			TestBusRoute(),
+			ZeroLoanStrategy(),
 		];
 
 		local strat;

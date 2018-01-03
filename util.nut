@@ -1,3 +1,49 @@
+function AllocateTruck(cargo) {
+	local z = 0;
+	local ctl = AICargo.GetCargoLabel(cargo);
+	AILog.Info("Pick truck for " + ctl);
+
+	local printvals = function(msg, alist) {
+		return;
+		local item;
+		local z;
+		local i = 0;
+		AILog.Info(msg);
+		AILog.Info("-----");
+		foreach (item,z in alist) {
+			local ct = AIEngine.GetCargoType(item);
+			local ctn = AICargo.GetCargoLabel(ct);
+			local n = AIEngine.GetName(item);
+			AILog.Info(i + " " + n + " " + ct + " " + ctn);
+			i++;
+		}
+		AILog.Info("-----");
+	}
+
+	local vlist = AIEngineList(AIVehicle.VT_ROAD);
+	printvals("available trucks:", vlist);
+
+	vlist.Valuate(AIEngine.GetCargoType);
+	vlist.KeepValue(cargo);
+	printvals("just cargo type" + cargo, vlist);
+
+	vlist.Valuate(AIEngine.IsBuildable);
+	vlist.KeepValue(1);
+	printvals("only buildable", vlist);
+
+	vlist.Valuate(AIEngine.GetRoadType);
+	vlist.KeepValue(AIRoad.ROADTYPE_ROAD);
+	printvals("just vehicles of our road type", vlist);
+
+	vlist.Valuate(AIEngine.GetCapacity);
+	vlist.Sort(AIList.SORT_BY_VALUE, AIList.SORT_DESCENDING);
+	printvals("sorted by capacity", vlist);
+
+	local eID = vlist.Begin();
+	AILog.Info("Chose " + AIEngine.GetName(eID));
+	return eID;
+}
+
 function FindIndustryStation(id) {
 	Debug("FIND station location for ", info.name, " at ", info.loc);
 	local first, tiles;

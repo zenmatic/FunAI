@@ -2,8 +2,11 @@
 class BuildBusRoute extends Task {
 
 	towns = [];
+	stations = {};
+	depots = {};
 	cargo = null;
 	vgroup = null;
+	vehicles = [];
 
 	// towns is an array of town IDs
 	constructor(parentTask, towns, cargoID) {
@@ -20,11 +23,11 @@ class BuildBusRoute extends Task {
 	
 	function Run() {
 
-		local stations = {};
 		local town;
 		foreach (town in this.towns) {
 
 			local location = AITown.GetLocation(town);
+			local name = AITown.GetName(town);
 			
 			local depot = FindClosestDepot(location, AITile.TRANSPORT_ROAD);
 			if (depot == null) {
@@ -34,25 +37,107 @@ class BuildBusRoute extends Task {
 				if (depot == null) {
 					throw TaskFailedException("unable to build depot");
 				}
+				depots[town] <- depot;
 			}
 
-			local bobj = BuildBusStationInTown(this, town);
+			Debug("build station in town ", name);
+			local bobj = BuildBusStationInTown(this, town, cargo);
 			subtasks = [ bobj ];
 			RunSubtasks();
 			stations[town] <- bobj.station;
+			Debug("station built is at ", stations[town]);
 		}
 
 		// TODO: need to sort by distance to each other
-		local i, j, town1, town2, station;
-		for (i=0; i < towns.len(); i++) {
-			town1 = towns[i];
-			station = stations[town1];
-			subtasks.append(BuildRoad(this, station, town1));
+		local i, j, town1, town2, station1, station2;
+		foreach (town1 in this.towns) {
 			for (j=0; j < towns.len(); j++) {
-				if (town1 == town2) { continue }
-				subtasks.append(BuildRoad(this, station, town2));
+				town2 = towns[j];
+				if (town1 != town2) {
+					subtasks.append(BuildTruckRoad(this, stations[town1], stations[town2]));
+				}
 			}
 		}
+		RunSubtasks();
+
+		local eID = AllocateTruck(this.cargo);
+		town = towns[0];
+		local depot = this.depots[town];
+		for (i=0; i < towns.len(); i++) {
+		foreach (town in towns) {
+			local depot = this.depots[town];
+			local veh = AIVehicle.BuildVehicle(depot, eID);
+		}
+
+		// 1 -> 2 -> 3 -> 4 -> 5 -> 4 -> 3 -> 2
+	}
+}
+
+class BuildBus extends Task {
+
+	depot = null;
+	cargo = null;
+
+	constructor(parentTask, depot, cargo) {
+		Task.constructor(parentTask, null);
+		this.depot = depot;
+		this.cargo = cargo;
+	}
+	
+	function _tostring() {
+		return "BuildBusStation";
+	}
+
+	function Run() {
+		local eID = AllocateTruck(this.cargo);
+		veh = AIVehicle.BuildVehicle(this.depot, eID);
+		return
+	}
+
+	function AllocateTruck(cargo) {
+		local z = 0;
+		local ctl = AICargo.GetCargoLabel(cargo);
+		AILog.Info("Pick truck for " + ctl);
+
+		local printvals = function(msg, alist) {
+			return;
+			local item;
+			local z;
+			local i = 0;
+			AILog.Info(msg);
+			AILog.Info("-----");
+			foreach (item,z in alist) {
+				local ct = AIEngine.GetCargoType(item);
+				local ctn = AICargo.GetCargoLabel(ct);
+				local n = AIEngine.GetName(item);
+				AILog.Info(i + " " + n + " " + ct + " " + ctn);
+				i++;
+			}
+			AILog.Info("-----");
+		}
+
+		local vlist = AIEngineList(AIVehicle.VT_ROAD);
+		printvals("available trucks:", vlist);
+
+		vlist.Valuate(AIEngine.GetCargoType);
+		vlist.KeepValue(cargo);
+		printvals("just cargo type" + cargo, vlist);
+
+		vlist.Valuate(AIEngine.IsBuildable);
+		vlist.KeepValue(1);
+		printvals("only buildable", vlist);
+
+		vlist.Valuate(AIEngine.GetRoadType);
+		vlist.KeepValue(AIRoad.ROADTYPE_ROAD);
+		printvals("just vehicles of our road type", vlist);
+
+		vlist.Valuate(AIEngine.GetCapacity);
+		vlist.Sort(AIList.SORT_BY_VALUE, AIList.SORT_DESCENDING);
+		printvals("sorted by capacity", vlist);
+
+		local eID = vlist.Begin();
+		AILog.Info("Chose " + AIEngine.GetName(eID));
+		return eID;
 	}
 }
 
@@ -72,12 +157,14 @@ class BuildBusStation extends Task {
 class BuildBusStationInTown extends Task {
 
 	town = null;
+	cargo = null;
 	station = null;
 	RADIUS = 40;
 
-	constructor(parentTask, town) {
+	constructor(parentTask, town, cargo) {
 		Task.constructor(parentTask, null);
 		this.town = town;
+		this.cargo = cargo;
 	}
 
 	function _tostring() {
@@ -94,7 +181,7 @@ class BuildBusStationInTown extends Task {
 	function BuildStopInTown(townID) {
 
 		local stat = AIStation.STATION_NEW;
-		local stype == AIRoad.ROADVEHTYPE_BUS) {
+		local stype = AIRoad.ROADVEHTYPE_BUS;
 
 		local tiles = AITileList();
 		SafeAddRectangle(tiles, AITown.GetLocation(townID), this.RADIUS);
@@ -108,7 +195,7 @@ class BuildBusStationInTown extends Task {
 		tiles.Valuate(AIRoad.IsRoadTile);
 		tiles.KeepValue(1);
 
-		tiles.Valuate(AITile.GetCargoAcceptance, cargoID, 1, 1, 1);
+		tiles.Valuate(AITile.GetCargoAcceptance, cargo, 1, 1, 1);
 		tiles.KeepAboveValue(1);
 
 		tiles.Valuate(AITile.GetDistanceManhattanToTile, AITown.GetLocation(townID));

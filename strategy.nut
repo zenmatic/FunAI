@@ -178,6 +178,7 @@ class SimpleSuppliesStrategy extends Strategy {
 	routes = [];
 	maxdistance = 0;
 	mindistance = 0;
+	TRUCK_MAX = 80;
 
 	constructor(min=20, max=50) {
 		maxdistance = max;
@@ -196,7 +197,11 @@ class SimpleSuppliesStrategy extends Strategy {
 			local cargo = r[0];
 			local producer = r[1];
 			local consumer = r[2];
-			tasks.append(BuildNamedCargoLine(null, producer, consumer, cargo));
+			if (AITile.GetDistanceManhattanToTile(producer, consumer) <= TRUCK_MAX) {
+				tasks.append(BuildTruckRoute(null, producer, consumer, cargo));
+			} else {
+				tasks.append(BuildNamedCargoLine(null, producer, consumer, cargo));
+			}
 		}
 	}
 
@@ -385,7 +390,7 @@ class ChooStrategy extends Strategy {
 class SubStrategy extends Strategy {
 
 	// if close, use a bus
-	BUS_DISTANCE = 80;
+	TRUCK_DISTANCE = 80;
 
 	desc = "grab all the subsidies";
 	subsidies = {
@@ -569,7 +574,7 @@ class SubStrategy extends Strategy {
 
 		local producer_info = getinfo(subID, AISubsidy.GetSourceIndex, AISubsidy.GetSourceType);
 		local consumer_info = getinfo(subID, AISubsidy.GetDestinationIndex, AISubsidy.GetDestinationType);
-		local distance = AITile.GetDistanceManhattanToTile(producer.info.location, consumer_info.location);
+		local distance = AITile.GetDistanceManhattanToTile(producer_info.location, consumer_info.location);
 		
 		if (AIIndustry.IsBuiltOnWater(producer_info.id)) {
 			local obj_depot = BuildWaterDepotBetween(null, producer_info.location, consumer_info.location);
@@ -580,7 +585,17 @@ class SubStrategy extends Strategy {
 			]);
 			RunTasks();
 			tasks.append(BuildShipRoute(null, obj_depot.depot, producer_info.location, obj_dock.dock, cargo));
-		} else if (distance <= BUS_DISTANCE) {
+		} else if (producer_info.type == AISubsidy.SPT_TOWN &&
+			consumer_info.type == AISubsidy.SPT_TOWN &&
+			AICargo.HasCargoClass(cargo, AICargo.CC_PASSENGERS)) {
+
+			local towns = [
+				producer_info.id,
+				consumer_info.id
+			];
+			tasks.append(BuildBusRoute(null, towns, cargo));
+
+		} else if (distance <= TRUCK_DISTANCE) {
 			tasks.append(BuildTruckRoute(null, producer_info.location, consumer_info.location, cargo));
 		} else {
 			tasks.append(BuildNamedCargoLine(null, producer_info.id, consumer_info.id, cargo));

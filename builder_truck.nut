@@ -216,6 +216,7 @@ class BuildTruckDepot extends Task {
 	constructor(parentTask, location) {
 		Task.constructor(parentTask, null);
 		this.location = location;
+		Debug("location=", location);
 	}
 	
 	function _tostring() {
@@ -227,14 +228,20 @@ class BuildTruckDepot extends Task {
 		local centertile = this.location;
 		local tiles = AITileList();
 		SafeAddRectangle(tiles, centertile, this.RADIUS);
-		tiles.RemoveValue(centertile);
+		//tiles.RemoveValue(centertile);
 
-		/* find all the roads */
-		tiles.Valuate(AIRoad.IsRoadTile);
-		tiles.KeepValue(1);
+		// find all the roads
+		local roadtiles = tiles;
+		roadtiles.Valuate(AIRoad.IsRoadTile);
+		roadtiles.KeepValue(1);
+		if (roadtiles.Count() > 0) {
+			tiles = roadtiles;
+		}
 
 		tiles.Valuate(AITile.GetDistanceManhattanToTile, centertile);
 		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+
+		Debug("tiles.Count()=",tiles.Count());
 
 		/* find all flat, buildable spots along the road */
 		local t, sur, s;

@@ -107,8 +107,8 @@ class FunAI extends AIController
 			//TransferStrategy(),
 			//TestTruckRoute(10),
 			//SimpleSuppliesStrategy(),
-			//SubStrategy(),
-			TestBusRoute(),
+			SubStrategy(),
+			//TestBusRoute(),
 			ZeroLoanStrategy(),
 		];
 

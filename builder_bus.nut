@@ -61,15 +61,56 @@ class BuildBusRoute extends Task {
 		RunSubtasks();
 
 		local eID = AllocateTruck(this.cargo);
-		town = towns[0];
+		local town = towns[0];
 		local depot = this.depots[town];
-		for (i=0; i < towns.len(); i++) {
-		foreach (town in towns) {
+		local veh1 = AIVehicle.BuildVehicle(depot, eID);
+		AIGroup.MoveVehicle(this.vgroup, veh1);
+		AddOrders(veh1);
+		AIVehicle.StartStopVehicle(veh1);
+
+		// start with one bus per town/station
+		for (i=1; i < towns.len(); i++) {
+			town = towns[i];
 			local depot = this.depots[town];
 			local veh = AIVehicle.BuildVehicle(depot, eID);
+			AIGroup.MoveVehicle(this.vgroup, veh);
+			AIOrder.ShareOrders(veh, veh1);
+			startOrderInTown(veh, town);
+			AIVehicle.StartStopVehicle(veh);
 		}
 
+	}
+
+	// start is the starting town
+	function AddOrders(veh) {
+
 		// 1 -> 2 -> 3 -> 4 -> 5 -> 4 -> 3 -> 2
+		local i;
+		for (i=0; i < towns.len(); i++) {
+			AddStation(veh, towns[i]);
+		}
+		for (i=i-1; i > 0; i--) {
+			AddStation(veh, towns[i]);
+		}
+	}
+
+	function AddStation(veh, town) {
+		local station = this.stations[town];
+		local depot = this.depots[town];
+		AIOrder.AppendOrder(veh, station, AIOrder.OF_NONE);
+		AIOrder.AppendOrder(veh, depot, AIOrder.OF_SERVICE_IF_NEEDED);
+	}
+
+	function startOrderInTown(veh, town) {
+		local i;
+		local oct = AIOrder.GetOrderCount(veh);
+		for (i=0; i < oct; i++) {
+			local loc = AIOrder.GetOrderDestination(veh, i);
+			if (loc == depots[town]) {
+				local next = (i + 1) >= oct ? 0 : (i+1);
+				AIOrder.SkipToOrder(veh, next);
+			}
+		}
 	}
 }
 

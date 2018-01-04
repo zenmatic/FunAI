@@ -7,10 +7,11 @@ class TestBusRoute extends Strategy {
 		towns.Sort(AIList.SORT_BY_VALUE, AIList.SORT_DESCENDING);
 		local town1 = towns.Begin();
 		local town2 = towns.Next();
+		local town3 = towns.Next();
 		local cargoIDs = GenCargos();
 		local cargo = cargoIDs.PASS;
 
-		tasks.append(BuildBusRoute(null, [town1, town2], cargo));
+		tasks.append(BuildBusRoute(null, [town1, town2, town3], cargo));
 	}
 }
 

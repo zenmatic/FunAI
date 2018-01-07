@@ -328,7 +328,7 @@ function Swap(tiles) {
  */
 function ListToArray(l) {
 	local a = [];
-	for (local item = l.Begin(); l.IsEnd(); item = l.Next()) a.append(item);
+	for (local item = l.Begin(); !l.IsEnd(); item = l.Next()) a.append(item);
 	return a;
 }
 

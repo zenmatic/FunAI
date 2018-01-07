@@ -604,6 +604,59 @@ class SubStrategy extends Strategy {
 
 }
 
+// probably works best on small maps
+class BusesToEveryTown extends Strategy {
+	desc = "bus stop in every town";
+
+	function Start() {
+		local l = AITownList();
+		// need to sort by distance or location
+		Debug("l.Count()=", l.Count());
+		local towns = ListToArray(l);
+		Debug("towns.len()=", towns.len());
+		local cargoIDs = GenCargos();
+		local cargo = cargoIDs.PASS;
+		tasks.append(BuildBusRoute(null, towns, cargo));
+	}
+}
+
+class BusesToPopularTowns extends Strategy {
+	desc = "bus stop in every town with a threshold population";
+	min = null;
+
+	constructor(population_min=500) {
+		this.min = population_min;
+	}
+
+	function Start() {
+		local tlist = AITownList();
+		tlist.Valuate(AITown.GetPopulation);
+		tlist.KeepAboveValue(min);
+		local valfunc = function (a,target) {
+			local tloc = AITown.GetLocation(target);
+			return AITown.GetDistanceManhattanToTile(a, target);
+		};
+		local biggest = tlist.Begin();
+		tlist.RemoveItem(biggest);
+		tlist.Valuate(valfunc, biggest);
+		tlist.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+
+		local towns = [ biggest ];
+		local arr = ListToArray(tlist);
+		towns.extend(arr);
+		local t;
+		foreach (t in towns) {
+			local tname = AITown.GetName(t);
+			local pop = AITown.GetPopulation(t);
+			Debug(tname," ", pop);
+		}
+
+		local cargoIDs = GenCargos();
+		local cargo = cargoIDs.PASS;
+		tasks.append(BuildBusRoute(null, towns, cargo));
+	}
+}
+
 class TransferStrategy extends Strategy {
 	desc = "try transferring stuff";
 

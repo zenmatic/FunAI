@@ -18,7 +18,13 @@ class BuildBusRoute extends Task {
 	}
 	
 	function _tostring() {
-		return "BuildBusRoute";
+		local str = "BuildBusRoute for the following towns: ";
+		local town, tname;
+		foreach (town in this.towns) {
+			tname = AITown.GetName(town);
+			str += tname + ", ";
+		}
+		return str;
 	}
 	
 	function Run() {

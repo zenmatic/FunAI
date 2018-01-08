@@ -623,9 +623,13 @@ class BusesToEveryTown extends Strategy {
 class BusesToPopularTowns extends Strategy {
 	desc = "bus stop in every town with a threshold population";
 	min = null;
+	busroute = null;
+	cargo = null;
 
 	constructor(population_min=500) {
 		this.min = population_min;
+		local cargoIDs = GenCargos();
+		this.cargo = cargoIDs.PASS;
 	}
 
 	function Start() {
@@ -651,9 +655,34 @@ class BusesToPopularTowns extends Strategy {
 			Debug(tname," ", pop);
 		}
 
-		local cargoIDs = GenCargos();
-		local cargo = cargoIDs.PASS;
-		tasks.append(BuildBusRoute(null, towns, cargo));
+		this.busroute = BuildBusRoute(null, towns, cargo);
+		tasks.append(this.busroute);
+	}
+
+	function Wake() {
+		local stations = this.busroute.stations;
+		local town, station;
+		foreach (town,station in stations) {
+			Debug("town=", town, " station=", station);
+			local stationID = AIStation.GetStationID(station);
+			local rating = GetRating(stationID);
+			if (rating < 65) {
+				Debug("Add another bus");
+				this.busroute.AddBusAtStation(station);
+			}
+		}
+	}
+
+	function GetRating(stationID) {
+		local rating = 100;
+		local sname = AIStation.GetName(stationID);
+		if (AIStation.HasCargoRating(stationID, cargo)) {
+			rating = AIStation.GetCargoRating(stationID, cargo);
+			Debug("rating at ", sname, " station is ", rating);
+		} else {
+			Debug("station ", sname, " has no rating");
+		}
+		return rating;
 	}
 }
 

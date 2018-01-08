@@ -11,7 +11,7 @@ class BuildBusRoute extends Task {
 	// towns is an array of town IDs
 	constructor(parentTask, towns, cargoID) {
 		Task.constructor(parentTask, null);
-		this.towns = towns;
+		this.towns = towns; // trust the order of the towns
 		cargo = cargoID;
 		vgroup = AIGroup.CreateGroup(AIVehicle.VT_ROAD);
 		subtasks = [];
@@ -54,7 +54,6 @@ class BuildBusRoute extends Task {
 			Debug("station built is at ", stations[town]);
 		}
 
-		// TODO: need to sort by distance to each other
 		local i, j, town1, town2, station1, station2;
 		foreach (town1 in this.towns) {
 			for (j=0; j < towns.len(); j++) {
@@ -66,25 +65,42 @@ class BuildBusRoute extends Task {
 		}
 		RunSubtasks();
 
-		local eID = AllocateTruck(this.cargo);
 		local town = towns[0];
 		local depot = this.depots[town];
-		local veh1 = AIVehicle.BuildVehicle(depot, eID);
-		AIGroup.MoveVehicle(this.vgroup, veh1);
+		local veh1 = AddBus(town);
 		AddOrders(veh1);
 		AIVehicle.StartStopVehicle(veh1);
 
 		// start with one bus per town/station
 		for (i=1; i < towns.len(); i++) {
 			town = towns[i];
-			local depot = this.depots[town];
-			local veh = AIVehicle.BuildVehicle(depot, eID);
-			AIGroup.MoveVehicle(this.vgroup, veh);
+			local veh = AddBus(town);
+			vehicles.append(veh);
 			AIOrder.ShareOrders(veh, veh1);
 			startOrderInTown(veh, town);
 			AIVehicle.StartStopVehicle(veh);
 		}
+	}
 
+	function AddBus(town) {
+		local eID = AllocateTruck(this.cargo);
+		local depot = this.depots[town];
+		local veh = AIVehicle.BuildVehicle(depot, eID);
+		vehicles.append(veh);
+		AIGroup.MoveVehicle(this.vgroup, veh);
+		return veh;
+	}
+
+	function AddBusAtStation(station) {
+		local s, town;
+		foreach (town,s in this.stations) {
+			if (s == station) {
+				local veh = AddBus(town);
+				AIOrder.ShareOrders(veh, vehicles[0]);
+				startOrderInTown(veh, town);
+				AIVehicle.StartStopVehicle(veh);
+			}
+		}
 	}
 
 	// start is the starting town

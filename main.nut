@@ -10,6 +10,7 @@ require("builder.nut");
 require("planner.nut");
 
 require("route.nut");
+require("guides.nut");
 require("strategy.nut");
 require("test.nut");
 
@@ -37,30 +38,17 @@ class FunAI extends AIController
 {
 	Me = AICompany.ResolveCompanyID(AICompany.COMPANY_SELF);
 
-	strategies = {};
+	guides = [];
 	timer = 0;
 	tasks = [];
 	cargoIDs = {}; // populated by GenCargos()
 
-	function Interate(func, args, arr) {
-		local i, strat;
-		foreach (i,strat in arr) {
-			// HOW? strat.func(args)
-		}
-	}
-
 	function Save() {
-		Debug("Save() called");
-		// can't save objects or functions, so need to revisit this, serialize?
-		local i, strat, saved = {};
-		foreach (strat in this.strategies) {
-			saved[strat.desc] <- strat.Save();
-		}
-		return saved;
+		return {};
 	}
 
 	function Load(version, data) {
-		Debug("Load() called");
+		return {};
 	}
 
 	function Start()
@@ -93,32 +81,15 @@ class FunAI extends AIController
 
 		GenCargos();
 
-		this.strategies = [
-			MaxLoanStrategy(),
-			//TestStuff(),
-			//TestExpandingStations(),
-			//TestIndustryInTown(),
-			//BasicCoalStrategy(),
-			//ChooStrategy(),
-			//TestStationInCity(),
-			//TestTerminusStation(),
-			//TestTransferStations(),
-			//TestOilToTown(),
-			//TransferStrategy(),
-			//TestTruckRoute(10),
-			//SimpleSuppliesStrategy(),
-			//SubStrategy(),
-			//BusesToEveryTown(),
-			BusesToPopularTowns(),
-			//TestBusRoute(),
-			ZeroLoanStrategy(),
+		this.guides = [
+			VerySmallMapGuide(),
 		];
 
-		local strat;
-		foreach (strat in this.strategies) {
-			Debug("strategy: " + strat.desc);
+		local guide;
+		foreach (guide in this.guides) {
+			Debug("guide: " + guide.desc);
 			try {
-				strat.Start();
+				guide.Start();
 			} catch (e) {
 				Error("exception thrown");
 			}
@@ -151,9 +122,9 @@ class FunAI extends AIController
 		while (AIEventController.IsEventWaiting()) {
 			local e = AIEventController.GetNextEvent();
 			Debug("this event occurred: " + e.GetEventType());
-			local strat;
-			foreach (strat in this.strategies) {
-				strat.Event(e);
+			local guide;
+			foreach (guide in this.guides) {
+				guide.Event(e);
 			}
 		}
 	}
@@ -196,12 +167,10 @@ class FunAI extends AIController
 			this.timer = s_tick + (5 * 30);
 		}
 
-		local strat;
-		foreach (strat in this.strategies) {
-			Debug("strategy " + strat.desc + ".Wake()");
-			strat.Wake();
-			Debug("strategy " + strat.desc + ".RunTasks()");
-			strat.RunTasks();
+		local guide;
+		foreach (guide in this.guides) {
+			Debug("guides " + guide.desc + ".Wake()");
+			guide.Wake();
 		}
 	}
 

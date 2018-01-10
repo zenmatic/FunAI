@@ -1,3 +1,74 @@
+class BuildStopInTown extends Task {
+
+	townID = null;
+	cargo = null;
+
+	constructor(parentTask, townID, cargo) {
+		Task.constructor(parentTask, null);
+		this.townID = townID;
+		this.cargo = cargo;
+	}
+
+	function _tostring() {
+		return "BuildStopInTown";
+	}
+
+	function Run() {
+
+		local stat = AIStation.STATION_NEW;
+		local ctn = AICargo.GetCargoLabel(cargo);
+		local stype = AIRoad.GetRoadVehicleTypeForCargo(cargo);
+		local stoptype = "UNKNOWN";
+		if (stype == AIRoad.ROADVEHTYPE_BUS) {
+			stoptype = "bus";
+		} else if (stype == AIRoad.ROADVEHTYPE_TRUCK) {
+			stoptype = "truck";
+		}
+		Debug("build " + stoptype + " stop for " + ctn + " cargo (" +
+			cargo + ") in " + AITown.GetName(townID));
+
+		local printvals = function(arr, msg) {
+			Debug(msg, ":", arr.Count());
+		}
+
+		local tiles = AITileList();
+		SafeAddRectangle(tiles, AITown.GetLocation(townID), 30);
+		tiles.Valuate(AITile.GetTownAuthority);
+		tiles.KeepValue(townID);
+		printvals(tiles, "AITile.GetTownAuthority");
+
+		//tiles.Valuate(AITile.HasTransportType, AITile.TRANSPORT_ROAD);
+		tiles.Valuate(AIRoad.IsRoadTile);
+		tiles.KeepValue(1);
+		printvals(tiles, "AIRoad.IsRoadTile");
+
+		tiles.Valuate(AITile.GetCargoAcceptance, cargo, 1, 1, 1);
+		tiles.KeepAboveValue(1);
+		printvals(tiles, "AITile.GetCargoAcceptance");
+
+		tiles.Valuate(AITile.GetDistanceManhattanToTile, AITown.GetLocation(townID));
+		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+
+		/* find buildable spots along the road */
+		local t, sur, s, z, ret;
+		foreach (t,z in tiles) {
+			sur = AITileList();
+			SafeAddRectangle(sur, t, 1);
+
+			sur.Valuate(AIRoad.IsRoadTile);
+			sur.KeepValue(1);
+			foreach (s,z in sur) {
+				ret = AIRoad.BuildDriveThroughRoadStation(t,s,stype,stat);
+				if (ret) {
+					// pass this to the parent?
+					//info.roadstation <- AIStation.GetStationID(t);
+					return;
+				}
+			}
+		}
+		throw TaskFailedException("no place to build a " + stoptype + " station");
+	}
+}
 
 class BuildTruckRoute extends Task {
 

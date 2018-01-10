@@ -10,7 +10,7 @@ TODO:
       - link bus stations
     if no, then regular cargo route 
 
-- understand directions with stations
+- cluster cities using rooted tree method, then vertices which in-tree toward middle sections
 - change strategy
 - settings (like strategies, route lenghts)
 - profit/expenses per route
@@ -31,6 +31,7 @@ TODO:
 - roadbuilder strategies (use existing roads) 
 
 DONE:
+- understand directions with stations
 - strategy class
   ->Start
   ->execute task/wake

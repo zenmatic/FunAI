@@ -11,14 +11,17 @@ class GuidingStrategy {
 
 	function DoAction(action, arg=null) {
 		local ret = Condition();
+		Debug("Condition returned ", ret);
 		if (ret == false) { return }
 
 		local strat;
+		Debug("number of strategies are ", strategies.len());
 		foreach (strat in strategies) {
 			Debug("strategy: action ", action, " on ", strat.desc);
 			try {
 				if (action == "Start") {
 					strat.Start();
+					strat.RunTasks();
 				} else if (action == "Stop") {
 					strat.Stop();
 				} else if (action == "Uninit") {
@@ -28,6 +31,7 @@ class GuidingStrategy {
 					strat.RunTasks();
 				} else if (action == "Event") {
 					strat.Event(arg);
+					strat.RunTasks();
 				}
 			} catch (e) {
 				Error("exception thrown");
@@ -57,7 +61,7 @@ class VerySmallMapGuide extends GuidingStrategy {
 	constructor() {
 		strategies = [
 			MaxLoanStrategy(),
-			BusesToPopularTowns(),
+			BusesToPopularTowns(1),
 			SubStrategy(),
 			ZeroLoanStrategy(),
 		];

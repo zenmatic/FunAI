@@ -274,12 +274,12 @@ class MaxLoanStrategy extends LoanStrategy {
 		local intval = AICompany.GetLoanInterval();
 		local max = AICompany.GetMaxLoanAmount();
 		local balance = AICompany.GetBankBalance(Me);
-		Debug("interval=" + intval + " max=" + max + " balance=" + balance);
+		//Debug("interval=" + intval + " max=" + max + " balance=" + balance);
 		local loan = max;
-		Debug("I want to get a loan of " + loan);
+		//Debug("I want to get a loan of " + loan);
 		local ret = AICompany.SetMinimumLoanAmount(loan);
 		balance = AICompany.GetBankBalance(Me);
-		Debug("ret=" + ret + " no my balance is " + balance);
+		//Debug("ret=" + ret + " my balance is " + balance);
 	}
 }
 
@@ -291,8 +291,8 @@ class ZeroLoanStrategy extends LoanStrategy {
 		local intval = AICompany.GetLoanInterval();
 		local balance = AICompany.GetBankBalance(Me);
 		local currloan = AICompany.GetLoanAmount();
-		Debug("current loan is " + currloan);
-		Debug("interval=" + intval + " currloan=" + currloan + " balance=" + balance);
+		//Debug("current loan is " + currloan);
+		//Debug("interval=" + intval + " currloan=" + currloan + " balance=" + balance);
 		if (currloan < 1) {
 			return;
 		}
@@ -303,9 +303,9 @@ class ZeroLoanStrategy extends LoanStrategy {
 			ct = balance / intval;
 		}
 		loan = currloan - (intval * ct);
-		Debug("I want set my loan to " + loan);
+		//Debug("I want set my loan to " + loan);
 		local ret = AICompany.SetLoanAmount(loan);
-		Debug("ret=" + ret);
+		//Debug("ret=" + ret);
 	}
 }
 
@@ -582,7 +582,6 @@ class BusesToPopularTowns extends Strategy {
 
 		this.busroute = BuildBusRoute(null, towns, cargo);
 		tasks.append(this.busroute);
-		RunSubTasks();
 	}
 
 	function Wake() {

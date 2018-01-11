@@ -148,8 +148,8 @@ class FunAI extends AIController
 		local q,z;
 		foreach (q,z in quarters) {
 			if (quarters[q] == date) {
-				Debug("New Quarter");
-				CompanyStats();
+				//Debug("New Quarter");
+				//CompanyStats();
 				//RouteStats();
 				//SubsidyStats();
 			}

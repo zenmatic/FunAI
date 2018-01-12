@@ -2,6 +2,7 @@ class BuildStopInTown extends Task {
 
 	townID = null;
 	cargo = null;
+	station = null;
 
 	constructor(parentTask, townID, cargo) {
 		Task.constructor(parentTask, null);
@@ -31,11 +32,14 @@ class BuildStopInTown extends Task {
 			Debug(msg, ":", arr.Count());
 		}
 
+		local maxRange = Sqrt(AITown.GetPopulation(townID)/100) + 4; 
 		local tiles = AITileList();
-		SafeAddRectangle(tiles, AITown.GetLocation(townID), 30);
-		tiles.Valuate(AITile.GetTownAuthority);
-		tiles.KeepValue(townID);
-		printvals(tiles, "AITile.GetTownAuthority");
+		SafeAddRectangle(tiles, AITown.GetLocation(townID), maxRange);
+		printvals(tiles, "AITileList()");
+
+		//tiles.Valuate(AITown.IsWithinTownInfluence, townID);
+		//tiles.KeepValue(1);
+		//printvals(tiles, "AITile.IsWithinTownInfluence");
 
 		//tiles.Valuate(AITile.HasTransportType, AITile.TRANSPORT_ROAD);
 		tiles.Valuate(AIRoad.IsRoadTile);
@@ -62,6 +66,7 @@ class BuildStopInTown extends Task {
 				if (ret) {
 					// pass this to the parent?
 					//info.roadstation <- AIStation.GetStationID(t);
+					this.station = t;
 					return;
 				}
 			}
@@ -118,9 +123,19 @@ class BuildTruckRoute extends Task {
 
 		subtasks.extend([
 			BuildTruckRoad(this, pobj.station, depot),
-			BuildTruckRoad(this, pobj.station, cobj.station),
-			BuildTruck(this, depot, pobj.station, cobj.station, cargo),
 		]);
+
+		local town = GetBetweenTown(pobj.station, cobj.station);
+		if (town != null) {
+			local town_loc = AITown.GetLocation(town);
+			subtasks.extend([
+				BuildTruckRoad(this, pobj.station, town_loc),
+				BuildTruckRoad(this, cobj.station, town_loc),
+			]);
+		} else {
+			subtasks.append(BuildTruckRoad(this, cobj.station, pobj.station));
+		}
+		subtasks.append(BuildTruck(this, depot, pobj.station, cobj.station, cargo));
 		RunSubtasks();
 	}
 }

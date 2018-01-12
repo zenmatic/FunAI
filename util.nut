@@ -1,3 +1,13 @@
+function GetBetweenTown(loc_a, loc_b)
+{
+	local town1 = AITile.GetClosestTown(loc_a);
+	local town2 = AITile.GetClosestTown(loc_b);
+	if (town1 == town2) {
+		return town1;
+	}
+	return null;
+}
+
 function AllocateTruck(cargo) {
 	local z = 0;
 	local ctl = AICargo.GetCargoLabel(cargo);
@@ -168,12 +178,13 @@ function GenCargos()
 
 	local clist = AICargoList();
 	local cname, cID, z;
-	AILog.Info("cargo mappings:");
+	local debugstr = "cargo mappings:";
 	foreach (cID,z in clist) {
 		cname = AICargo.GetCargoLabel(cID);
 		cargoIDs[cname] <- cID;
-		AILog.Info(cname + "=" + cID);
+		debugstr += " " + cname + "=" + cID;
 	}
+	Debug(debugstr);
 	return cargoIDs;
 }
 

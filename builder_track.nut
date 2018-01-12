@@ -152,7 +152,7 @@ class BuildTrack extends Task {
 					} else {
 						local bridge_list = AIBridgeList_Length(length);
 						bridge_list.Valuate(AIBridge.GetMaxSpeed);
-						bridge_list.Sort(AIAbstractList.SORT_BY_VALUE, false);
+						bridge_list.Sort(AIList.SORT_BY_VALUE, false);
 						AIBridge.BuildBridge(AIVehicle.VT_RAIL, bridge_list.Begin(), prev, node.GetTile());
 						//costEstimate = GetMaxBridgeCost(length);
 						CheckError();

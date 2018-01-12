@@ -1,5 +1,5 @@
 
-class BuildBusRoute extends Task {
+class BuildTownRoute extends Task {
 
 	towns = [];
 	stations = {};
@@ -18,7 +18,7 @@ class BuildBusRoute extends Task {
 	}
 	
 	function _tostring() {
-		local str = "BuildBusRoute for the following towns: ";
+		local str = "BuildTownRoute for the following towns: ";
 		local town, tname;
 		foreach (town in this.towns) {
 			tname = AITown.GetName(town);
@@ -47,7 +47,7 @@ class BuildBusRoute extends Task {
 			}
 
 			Debug("build station in town ", name);
-			local bobj = BuildBusStationInTown(this, town, cargo);
+			local bobj = BuildStopInTown(this, town, cargo);
 			subtasks = [ bobj ];
 			RunSubtasks();
 			stations[town] <- bobj.station;

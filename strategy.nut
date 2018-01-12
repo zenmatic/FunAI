@@ -514,15 +514,13 @@ class SubStrategy extends Strategy {
 			]);
 			RunTasks();
 			tasks.append(BuildShipRoute(null, obj_depot.depot, producer_info.location, obj_dock.dock, cargo));
-		} else if (producer_info.type == AISubsidy.SPT_TOWN &&
-			consumer_info.type == AISubsidy.SPT_TOWN &&
-			AICargo.HasCargoClass(cargo, AICargo.CC_PASSENGERS)) {
+		} else if (producer_info.type == AISubsidy.SPT_TOWN && consumer_info.type == AISubsidy.SPT_TOWN) {
 
 			local towns = [
 				producer_info.id,
 				consumer_info.id
 			];
-			tasks.append(BuildBusRoute(null, towns, cargo));
+			tasks.append(BuildTownRoute(null, towns, cargo));
 
 		} else if (distance <= TRUCK_DISTANCE) {
 			tasks.append(BuildTruckRoute(null, producer_info.location, consumer_info.location, cargo));

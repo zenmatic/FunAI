@@ -50,7 +50,6 @@ class Strategy {
 						task.Failed();
 					} else if (e instanceof NeedMoneyException) {
 						Debug(task + " needs £" + e.amount);
-						minMoney = e.amount;
 					}
 				} else {
 					Error("Unexpected error");
@@ -578,7 +577,7 @@ class BusesToPopularTowns extends Strategy {
 			Debug(tname," ", pop);
 		}
 
-		this.busroute = BuildBusRoute(null, towns, cargo);
+		this.busroute = BuildTownRoute(null, towns, cargo);
 		tasks.append(this.busroute);
 	}
 

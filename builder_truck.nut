@@ -16,7 +16,7 @@ class BuildStopInTown extends Task {
 
 	function Run() {
 
-		local stat = AIStation.STATION_NEW;
+		local stat = AIStation.STATION_JOIN_ADJACENT;
 		local ctn = AICargo.GetCargoLabel(cargo);
 		local stype = AIRoad.GetRoadVehicleTypeForCargo(cargo);
 		local stoptype = "UNKNOWN";

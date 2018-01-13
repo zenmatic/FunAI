@@ -46,12 +46,19 @@ class BuildTownRoute extends Task {
 				depots[town] <- depot;
 			}
 
-			Debug("build station in town ", name);
-			local bobj = BuildStopInTown(this, town, cargo);
-			subtasks = [ bobj ];
-			RunSubtasks();
-			stations[town] <- bobj.station;
-			Debug("station built is at ", stations[town]);
+			local station = AICargo.HasCargoClass(cargo, AICargo.CC_PASSENGERS) ?
+				FindTownBusStation(town) : FindTownTruckStation(town);
+			if (station == null) {
+				Debug("build station in town ", name);
+				local bobj = BuildStopInTown(this, town, cargo);
+				subtasks = [ bobj ];
+				RunSubtasks();
+				stations[town] <- bobj.station;
+				Debug("station built is at ", stations[town]);
+			} else {
+				stations[town] <- station;
+				Debug("pre-existing station at ", stations[town]);
+			}
 		}
 
 		local i, j, town1, town2, station1, station2;
@@ -119,7 +126,7 @@ class BuildTownRoute extends Task {
 	function AddStation(veh, town) {
 		local station = this.stations[town];
 		local depot = this.depots[town];
-		AIOrder.AppendOrder(veh, station, AIOrder.OF_NONE);
+		AIOrder.AppendOrder(veh, station, AIOrder.OF_NON_STOP_INTERMEDIATE);
 		AIOrder.AppendOrder(veh, depot, AIOrder.OF_SERVICE_IF_NEEDED);
 	}
 

@@ -497,7 +497,7 @@ class BuildBus extends Task {
 	
 }
 
-function FindTownBusStation(town) {
+function FindTownTruckStation(town, stype=AIStation.STATION_TRUCK_STOP) {
 	// find a road station in town that is not also a train station
 	local area = AITileList();
 	SafeAddRectangle(area, AITown.GetLocation(town), 20);
@@ -507,10 +507,14 @@ function FindTownBusStation(town) {
 	area.KeepValue(1);
 	for (local tile = area.Begin(); !area.IsEnd(); tile = area.Next()) {
 		local station = AIStation.GetStationID(tile);
-		if (AIStation.HasStationType(station, AIStation.STATION_BUS_STOP) && !AIStation.HasStationType(station, AIStation.STATION_TRAIN)) {
+		if (AIStation.HasStationType(station, stype) && !AIStation.HasStationType(station, AIStation.STATION_TRAIN)) {
 			return tile;
 		}
 	}
 	
 	return null;
+}
+
+function FindTownBusStation(town) {
+	return FindTownTruckStation(town, AIStation.STATION_BUS_STOP);
 }

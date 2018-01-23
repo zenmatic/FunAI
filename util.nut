@@ -1,3 +1,15 @@
+function GetRating(stationID) {
+	local rating = 100;
+	local sname = AIStation.GetName(stationID);
+	if (AIStation.HasCargoRating(stationID, cargo)) {
+		rating = AIStation.GetCargoRating(stationID, cargo);
+		Debug("rating at ", sname, " station is ", rating);
+	} else {
+		Debug("station ", sname, " has no rating");
+	}
+	return rating;
+}
+
 function GetBetweenTown(loc_a, loc_b)
 {
 	local town1 = AITile.GetClosestTown(loc_a);

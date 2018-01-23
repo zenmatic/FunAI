@@ -358,6 +358,18 @@ class SubStrategy extends Strategy {
 	}
 
 	function Wake() {
+		local route;
+		foreach (route,_ in this.routes) {
+			local station;
+			foreach (station,_ in stations) {
+				local stationID = AIStation.GetStationID(station);
+				local rating = GetRating(stationID);
+				if (rating < 65) {
+					Debug("Add another bus");
+					route.AddVehicleAtStation(station);
+				}
+			}
+		}
 	}
 
 	function Event(e) {
@@ -512,22 +524,28 @@ class SubStrategy extends Strategy {
 				obj_dock,
 			]);
 			RunTasks();
-			tasks.append(BuildShipRoute(null, obj_depot.depot, producer_info.location, obj_dock.dock, cargo));
+			local r = BuildShipRoute(null, obj_depot.depot, producer_info.location, obj_dock.dock, cargo);
+			routes.append(r);
+			tasks.append(r);
 		} else if (producer_info.type == AISubsidy.SPT_TOWN && consumer_info.type == AISubsidy.SPT_TOWN) {
 
 			local towns = [
 				producer_info.id,
 				consumer_info.id
 			];
-			tasks.append(BuildTownRoute(null, towns, cargo));
-
+			local r = BuildTownRoute(null, towns, cargo);
+			routes.append(r);
+			tasks.append(r);
 		} else if (distance <= TRUCK_DISTANCE) {
-			tasks.append(BuildTruckRoute(null, producer_info.location, consumer_info.location, cargo));
+			local r = BuildTruckRoute(null, producer_info.location, consumer_info.location, cargo);
+			routes.append(r);
+			tasks.append(r);
 		} else {
-			tasks.append(BuildNamedCargoLine(null, producer_info.id, consumer_info.id, cargo));
+			local r = BuildNamedCargoLine(null, producer_info.id, consumer_info.id, cargo);
+			routes.append(r);
+			tasks.append(r);
 		}
 	}
-
 }
 
 // probably works best on small maps
@@ -593,18 +611,6 @@ class BusesToPopularTowns extends Strategy {
 				this.busroute.AddBusAtStation(station);
 			}
 		}
-	}
-
-	function GetRating(stationID) {
-		local rating = 100;
-		local sname = AIStation.GetName(stationID);
-		if (AIStation.HasCargoRating(stationID, cargo)) {
-			rating = AIStation.GetCargoRating(stationID, cargo);
-			Debug("rating at ", sname, " station is ", rating);
-		} else {
-			Debug("station ", sname, " has no rating");
-		}
-		return rating;
 	}
 }
 

@@ -1,5 +1,4 @@
-
-class BuildTownRoute extends Task {
+class BuildTownRoute extends Route {
 
 	towns = [];
 	stations = {};
@@ -10,7 +9,7 @@ class BuildTownRoute extends Task {
 
 	// towns is an array of town IDs
 	constructor(parentTask, towns, cargoID) {
-		Task.constructor(parentTask, null);
+		Route.constructor(parentTask, null);
 		this.towns = towns; // trust the order of the towns
 		cargo = cargoID;
 		vgroup = AIGroup.CreateGroup(AIVehicle.VT_ROAD);

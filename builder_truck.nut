@@ -75,15 +75,16 @@ class BuildStopInTown extends Task {
 	}
 }
 
-class BuildTruckRoute extends Task {
+class BuildTruckRoute extends Route {
 
 	producer = null;
 	consumer = null;
 	cargo = null;
 	vgroup = null;
+	stations = [];
 
 	constructor(parentTask, prod, cons, cargoID) {
-		Task.constructor(parentTask, null);
+		Route.constructor(parentTask, null);
 		producer = prod;
 		consumer = cons;
 		cargo = cargoID;
@@ -120,6 +121,8 @@ class BuildTruckRoute extends Task {
 		} else if (cobj.station == null) {
 			throw TaskFailedException("cobj.station is null");
 		}
+		stations.append(pobj.station);
+		stations.append(cobj.station);
 
 		subtasks.extend([
 			BuildTruckRoad(this, pobj.station, depot),
@@ -263,7 +266,7 @@ class BuildTruckStation extends Task {
 	function Run() {
 
 		local tiles = AITileList();
-		SafeAddRectangle(tiles, location, 1);
+		SafeAddRectangle(tiles, location, 2);
 		tiles.RemoveValue(location);
 		tiles.Valuate(AITile.GetSlope);
 		tiles.KeepValue(AITile.SLOPE_FLAT);

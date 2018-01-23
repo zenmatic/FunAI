@@ -676,3 +676,128 @@ class ExtendCrossing extends Builder {
 		return AIRail.IsRailTile(GetTile(tileCoords));
 	}
 }
+
+class Route extends Task {
+
+	locations = null;
+	cargo = null;
+	vgroup = null;
+	vtype = null;
+	stations = {}; // assuming that every station has a corresponding depot
+	depots = {};
+	vehicles = [];
+
+	constructor(parentTask, locations, cargo, vtype=AIVehicle.VT_ROAD) {
+		Task.constructor(parentTask, null);
+		this.locations = locations; // an array of locations
+		this.cargo = cargo;
+		this.vtype = vtype;
+		this.vgroup = AIGroup.CreateGroup(vtype);
+		subtasks = [];
+	}
+	
+	function _tostring() {
+		return "Route";
+	}
+
+	// most basic route assumes a 1-to-1 mapping, a producer and a consumer
+	function Run() {
+		local producer = locations[0];
+		local consumer = locations[1];
+		local depot = FindClosestDepot(producer, this.vtype);
+		if (depot == null) {
+			local d = BuildTruckDepot(this, producer);
+			d.Run();
+			depot = d.depot;
+			if (depot == null) {
+				throw TaskFailedException("unable to build depot");
+			}
+		}
+		Debug("depot is ", depot);
+		local pobj = BuildTruckStation(this, producer);
+		local cobj = BuildTruckStation(this, consumer);
+		subtasks.extend([
+			pobj,
+			cobj,
+		]);
+		RunSubtasks();
+		Debug("pobj.station is ", pobj.station, " cobj.station is ", cobj.station);
+		if (pobj.station == null) {
+			throw TaskFailedException("pobj.station is null");
+		} else if (cobj.station == null) {
+			throw TaskFailedException("cobj.station is null");
+		}
+		stations.append(pobj.station);
+		stations.append(cobj.station);
+
+		subtasks.extend([
+			BuildTruckRoad(this, pobj.station, depot),
+		]);
+
+		local town = GetBetweenTown(pobj.station, cobj.station);
+		if (town != null) {
+			local town_loc = AITown.GetLocation(town);
+			subtasks.extend([
+				BuildTruckRoad(this, pobj.station, town_loc),
+				BuildTruckRoad(this, cobj.station, town_loc),
+			]);
+		} else {
+			subtasks.append(BuildTruckRoad(this, cobj.station, pobj.station));
+		}
+		subtasks.append(BuildTruck(this, depot, pobj.station, cobj.station, cargo));
+		RunSubtasks();
+	}
+
+	function AddVehicle(depot) {
+		local eID = AllocateTruck(this.cargo);
+		local depot = this.depots[depot];
+		local veh = AIVehicle.BuildVehicle(depot, eID);
+		vehicles.append(veh);
+		AIGroup.MoveVehicle(this.vgroup, veh);
+		return veh;
+	}
+
+	function AddVehicleAtStation(station) {
+		local s, town;
+		foreach (s,_ in this.stations) {
+			if (s == station) {
+				local veh = AddVehicle(town);
+				AIOrder.ShareOrders(veh, vehicles[0]);
+				startOrderInTown(veh, town);
+				AIVehicle.StartStopVehicle(veh);
+			}
+		}
+	}
+
+	// start is the starting town
+	function AddOrders(veh) {
+
+		// 1 -> 2 -> 3 -> 4 -> 5 -> 4 -> 3 -> 2
+		local i;
+		for (i=0; i < towns.len(); i++) {
+			AddStation(veh, towns[i]);
+		}
+		for (i=i-1; i > 0; i--) {
+			AddStation(veh, towns[i]);
+		}
+	}
+
+	function AddStation(veh, town) {
+		local station = this.stations[town];
+		local depot = this.depots[town];
+		AIOrder.AppendOrder(veh, station, AIOrder.OF_NON_STOP_INTERMEDIATE);
+		AIOrder.AppendOrder(veh, depot, AIOrder.OF_SERVICE_IF_NEEDED);
+	}
+
+	function startOrderInTown(veh, town) {
+		local i;
+		local oct = AIOrder.GetOrderCount(veh);
+		for (i=0; i < oct; i++) {
+			local loc = AIOrder.GetOrderDestination(veh, i);
+			if (loc == depots[town]) {
+				local next = (i + 1) >= oct ? 0 : (i+1);
+				AIOrder.SkipToOrder(veh, next);
+			}
+		}
+	}
+}

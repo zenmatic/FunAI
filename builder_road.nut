@@ -47,7 +47,10 @@ class BuildRoad extends Task {
 		
 		SetSecondarySign("Pathfinding...");
 		pathfinder.InitializePath([a], [b]);
-		return pathfinder.FindPath(AIMap.DistanceManhattan(a, b) * 3 * TICKS_PER_DAY);
+		local pathnum = AIMap.DistanceManhattan(a, b) * 3 * TICKS_PER_DAY;
+		pathnum = pathnum / 2;
+		Debug("FindPath(", pathnum, ")");
+		return pathfinder.FindPath(pathnum);
 	}
 	
 	function BuildPath(path) {

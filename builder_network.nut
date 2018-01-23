@@ -683,9 +683,10 @@ class Route extends Task {
 	cargo = null;
 	vgroup = null;
 	vtype = null;
-	stations = {}; // assuming that every station has a corresponding depot
-	depots = {};
+	stations = [];
+	depots = [];
 	vehicles = [];
+	subtasks = [];
 
 	constructor(parentTask, locations, cargo, vtype=AIVehicle.VT_ROAD) {
 		Task.constructor(parentTask, null);
@@ -693,7 +694,6 @@ class Route extends Task {
 		this.cargo = cargo;
 		this.vtype = vtype;
 		this.vgroup = AIGroup.CreateGroup(vtype);
-		subtasks = [];
 	}
 	
 	function _tostring() {
@@ -713,7 +713,7 @@ class Route extends Task {
 				throw TaskFailedException("unable to build depot");
 			}
 		}
-		Debug("depot is ", depot);
+		depots.append(depot);
 		local pobj = BuildTruckStation(this, producer);
 		local cobj = BuildTruckStation(this, consumer);
 		subtasks.extend([
@@ -727,10 +727,9 @@ class Route extends Task {
 		} else if (cobj.station == null) {
 			throw TaskFailedException("cobj.station is null");
 		}
-		stations.append(pobj.station);
-		stations.append(cobj.station);
-
-		subtasks.extend([
+		stations.extend([
+			pobj.station,
+			cobj.station,
 			BuildTruckRoad(this, pobj.station, depot),
 		]);
 

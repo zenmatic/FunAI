@@ -367,3 +367,80 @@ class MixedNetwork extends Network {
 	}
 
 }
+
+class WorldTiles {
+	checks = null;
+	totaltiles = 0;
+
+	constructor() {
+		this.totaltiles = AIMap.GetMapSize();
+		this.checks = {
+			water = {
+				func = AITile.IsWaterTile,
+				count = 0,
+				percent = 0,
+			},
+			land = {
+				func = IsLandTile,
+				count = 0,
+				percent = 0,
+			},
+		};
+
+		Update();
+	}
+
+	function GetCount(tiletype) {
+		try {
+			return this.checks[tiletype].count;
+		} except e {
+			Debug("tiletype ", tiletype, " doesn't exist");
+			return null;
+		}
+	}
+
+	function GetPercentage(tiletype) {
+		try {
+			return this.checks[tiletype].percent;
+		} except e {
+			Debug("tiletype ", tiletype, " doesn't exist");
+			return null;
+		}
+	}
+
+	function GetAllCounts() {
+		return this.checks;
+	}
+
+	function Update() {
+
+		local x = 1;
+		local y = 1;
+		local first = AIMap.GetTileIndex(x,y)
+
+		x = AIMap.GetMapSizeX();
+		y = AIMap.GetMapSizeY();
+		local last = AIMap.GetTileIndex(x,y);
+
+		local tiles = AITileList();
+		tiles.AddRectangle(first, last)
+
+		local tiletype, tbl;
+		foreach (tiletype,tbl in checks) {
+			local tlist = tiles;
+			tlist.Valuate(tbl.func);
+			tlist.KeepValue(1);
+			local ct = tlist.Count();
+			this.checks[tiletype].count = ct;
+			this.checks[tiletype].percent = (ct / this.totaltiles) * 100;
+		}
+	}
+
+	
+	function IsLandTile(tile) {
+		if (AITile.IsWaterTile(tile) || AITile.IsCoastTile(tile) {
+			return false;
+		}
+		return true;
+	}
+}

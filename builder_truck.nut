@@ -77,69 +77,8 @@ class BuildStopInTown extends Task {
 
 class BuildTruckRoute extends Route {
 
-	producer = null;
-	consumer = null;
-	cargo = null;
-	vgroup = null;
-	stations = [];
-
-	constructor(parentTask, prod, cons, cargoID) {
-		Route.constructor(parentTask, null);
-		producer = prod;
-		consumer = cons;
-		cargo = cargoID;
-		vgroup = AIGroup.CreateGroup(AIVehicle.VT_ROAD);
-		subtasks = [];
-	}
-	
 	function _tostring() {
 		return "BuildTruckRoute";
-	}
-	
-	function Run() {
-
-		local depot = FindClosestDepot(producer, AITile.TRANSPORT_ROAD);
-		if (depot == null) {
-			local d = BuildTruckDepot(this, producer);
-			d.Run();
-			depot = d.depot;
-			if (depot == null) {
-				throw TaskFailedException("unable to build depot");
-			}
-		}
-		Debug("depot is ", depot);
-		local pobj = BuildTruckStation(this, producer);
-		local cobj = BuildTruckStation(this, consumer);
-		subtasks.extend([
-			pobj,
-			cobj,
-		]);
-		RunSubtasks();
-		Debug("pobj.station is ", pobj.station, " cobj.station is ", cobj.station);
-		if (pobj.station == null) {
-			throw TaskFailedException("pobj.station is null");
-		} else if (cobj.station == null) {
-			throw TaskFailedException("cobj.station is null");
-		}
-		stations.append(pobj.station);
-		stations.append(cobj.station);
-
-		subtasks.extend([
-			BuildTruckRoad(this, pobj.station, depot),
-		]);
-
-		local town = GetBetweenTown(pobj.station, cobj.station);
-		if (town != null) {
-			local town_loc = AITown.GetLocation(town);
-			subtasks.extend([
-				BuildTruckRoad(this, pobj.station, town_loc),
-				BuildTruckRoad(this, cobj.station, town_loc),
-			]);
-		} else {
-			subtasks.append(BuildTruckRoad(this, cobj.station, pobj.station));
-		}
-		subtasks.append(BuildTruck(this, depot, pobj.station, cobj.station, cargo));
-		RunSubtasks();
 	}
 }
 

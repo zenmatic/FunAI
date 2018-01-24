@@ -700,7 +700,8 @@ class Route extends Task {
 		return "Route";
 	}
 
-	// most basic route assumes a 1-to-1 mapping, a producer and a consumer
+	// most basic route assumes a 1-to-1 mapping, a producer (and depot)
+	// and a consumer
 	function Run() {
 		local producer = locations[0];
 		local consumer = locations[1];
@@ -730,8 +731,8 @@ class Route extends Task {
 		stations.extend([
 			pobj.station,
 			cobj.station,
-			BuildTruckRoad(this, pobj.station, depot),
 		]);
+		subtasks.append(BuildTruckRoad(this, pobj.station, depot));
 
 		local town = GetBetweenTown(pobj.station, cobj.station);
 		if (town != null) {
@@ -743,13 +744,21 @@ class Route extends Task {
 		} else {
 			subtasks.append(BuildTruckRoad(this, cobj.station, pobj.station));
 		}
-		subtasks.append(BuildTruck(this, depot, pobj.station, cobj.station, cargo));
 		RunSubtasks();
+
+		local veh = AddVehicle(depot);
+		if (vehicles.len() == 1) {
+			// only give orders to the first vehicle
+			// the rest just share those orders
+			AddOrders(veh);
+		} else {
+			AIOrder.ShareOrders(veh, vehicles[0]);
+		}
+		AIVehicle.StartStopVehicle(veh);
 	}
 
 	function AddVehicle(depot) {
 		local eID = AllocateTruck(this.cargo);
-		local depot = this.depots[depot];
 		local veh = AIVehicle.BuildVehicle(depot, eID);
 		vehicles.append(veh);
 		AIGroup.MoveVehicle(this.vgroup, veh);
@@ -757,46 +766,59 @@ class Route extends Task {
 	}
 
 	function AddVehicleAtStation(station) {
-		local s, town;
+		local s;
 		foreach (s,_ in this.stations) {
 			if (s == station) {
 				local veh = AddVehicle(town);
 				AIOrder.ShareOrders(veh, vehicles[0]);
-				startOrderInTown(veh, town);
+				StartOrderAtStation(veh, s);
 				AIVehicle.StartStopVehicle(veh);
 			}
 		}
 	}
 
-	// start is the starting town
-	function AddOrders(veh) {
-
-		// 1 -> 2 -> 3 -> 4 -> 5 -> 4 -> 3 -> 2
-		local i;
-		for (i=0; i < towns.len(); i++) {
-			AddStation(veh, towns[i]);
-		}
-		for (i=i-1; i > 0; i--) {
-			AddStation(veh, towns[i]);
-		}
-	}
-
-	function AddStation(veh, town) {
-		local station = this.stations[town];
-		local depot = this.depots[town];
-		AIOrder.AppendOrder(veh, station, AIOrder.OF_NON_STOP_INTERMEDIATE);
-		AIOrder.AppendOrder(veh, depot, AIOrder.OF_SERVICE_IF_NEEDED);
-	}
-
-	function startOrderInTown(veh, town) {
+	function StartOrderAtStation(veh, station) {
 		local i;
 		local oct = AIOrder.GetOrderCount(veh);
 		for (i=0; i < oct; i++) {
 			local loc = AIOrder.GetOrderDestination(veh, i);
-			if (loc == depots[town]) {
-				local next = (i + 1) >= oct ? 0 : (i+1);
-				AIOrder.SkipToOrder(veh, next);
+			if (loc == station) {
+				AIOrder.SkipToOrder(veh, i);
+				return;
 			}
 		}
+	}
+
+	// need to sort stations and depots by distance from one another
+	function AddOrders(veh) {
+
+		// 1 -> 2 -> 3 -> 4 -> 5 -> 4 -> 3 -> 2
+		local i;
+		local stops = [];
+		stops.extend(stations, depots);
+		stops = SortByDistance(stops);
+		for (i=0; i < stops.len(); i++) {
+			AddStation(veh, stops[i]);
+		}
+		for (i=i-1; i > 0; i--) {
+			AddStation(veh, stops[i]);
+		}
+	}
+
+	function SortByDistance(arr) {
+		local newarr = [];
+		local l = ArraytoList(arr);
+		local loc1 = l.Begin();
+		l.RemoveValue(loc1);
+		newarr.append(loc1);
+		while (l.Count() > 0) {
+			l.Valuate(AITile.GetDistanceManhattanToTile, loc1);
+			l.Sort(AIList.SORT_BY_VALUE, false);
+			local loc2 = l.Begin();
+			l.RemoveValue(loc2);
+			newarr.append(loc2);
+			loc1 = loc2;
+		}
+		return newarr;
 	}
 }

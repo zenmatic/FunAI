@@ -61,7 +61,6 @@ class Strategy {
 
 }
 
-
 class BuildTrain2 extends BuildTrain {
 
 	fromtile = null;
@@ -103,7 +102,6 @@ class BuildTrain2 extends BuildTrain {
 
 class SimpleSuppliesStrategy extends Strategy {
 	desc = "make supply routes which are somewhat close together";
-	routes = [];
 	maxdistance = 0;
 	mindistance = 0;
 	TRUCK_MAX = 80;
@@ -118,6 +116,20 @@ class SimpleSuppliesStrategy extends Strategy {
 	}
 
 	function Wake() {
+
+		local route;
+		foreach (route,_ in this.routes) {
+			local station;
+			foreach (station in route.stations) {
+				local stationID = AIStation.GetStationID(station);
+				local rating = GetRating(stationID);
+				if (rating < 65) {
+					Debug("Add another bus");
+					route.AddVehicleAtStation(station);
+				}
+			}
+		}
+
 		local routelist = FindSupplyRoutes();
 		if (routelist.len() > 0) {
 			local r = routelist.pop();
@@ -125,11 +137,14 @@ class SimpleSuppliesStrategy extends Strategy {
 			local cargo = r[0];
 			local producer = r[1];
 			local consumer = r[2];
+			local obj;
 			if (AITile.GetDistanceManhattanToTile(producer, consumer) <= TRUCK_MAX) {
-				tasks.append(BuildTruckRoute(null, producer, consumer, cargo));
+				obj = BuildTruckRoute(null, producer, consumer, cargo);
 			} else {
-				tasks.append(BuildNamedCargoLine(null, producer, consumer, cargo));
+				obj = BuildNamedCargoLine(null, producer, consumer, cargo);
 			}
+			routes.append(obj);
+			tasks.append(obj);
 		}
 	}
 

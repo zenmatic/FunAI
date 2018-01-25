@@ -256,26 +256,30 @@ class BuildTruckDepot extends Task {
 		local centertile = this.location;
 		local tiles = AITileList();
 		SafeAddRectangle(tiles, centertile, this.RADIUS);
-		//tiles.RemoveValue(centertile);
+		tiles.RemoveValue(centertile);
+		tiles.Valuate(AITile.IsBuildable);
+		tiles.KeepValue(1);
 
 		// find all the roads
-		local roadtiles = tiles;
+		local roadtiles = AITileList();
+		SafeAddRectangle(roadtiles, centertile, this.RADIUS);
 		roadtiles.Valuate(AIRoad.IsRoadTile);
 		roadtiles.KeepValue(1);
 		if (roadtiles.Count() > 0) {
+			Debug("road tiles found");
 			tiles = roadtiles;
 		}
 
 		tiles.Valuate(AITile.GetDistanceManhattanToTile, centertile);
 		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
 
-		Debug("tiles.Count()=",tiles.Count());
-
 		/* find all flat, buildable spots along the road */
 		local t, sur, s;
 		foreach (t,_ in tiles) {
+			AISign.BuildSign(t, "X");
 			sur = AITileList();
 			SafeAddRectangle(sur, t, 1);
+			sur.RemoveValue(t);
 			sur.Valuate(AITile.GetSlope);
 			sur.KeepValue(AITile.SLOPE_FLAT);
 
@@ -290,8 +294,8 @@ class BuildTruckDepot extends Task {
 				}
 			}
 		}
+		throw TaskFailedException("No suitable spot for a depot found");
 	}
-
 }
 
 class BuildTruck extends Task {

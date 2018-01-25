@@ -694,6 +694,11 @@ class Route extends Task {
 		this.cargo = cargo;
 		this.vtype = vtype;
 		this.vgroup = AIGroup.CreateGroup(vtype);
+
+		stations = [];
+		depots = [];
+		vehicles = [];
+		subtasks = [];
 	}
 	
 	function _tostring() {
@@ -795,7 +800,8 @@ class Route extends Task {
 		// 1 -> 2 -> 3 -> 4 -> 5 -> 4 -> 3 -> 2
 		local i;
 		local stops = [];
-		stops.extend(stations, depots);
+		stops.extend(stations);
+		stops.extend(depots);
 		stops = SortByDistance(stops);
 		for (i=0; i < stops.len(); i++) {
 			AddStation(veh, stops[i]);
@@ -807,7 +813,7 @@ class Route extends Task {
 
 	function SortByDistance(arr) {
 		local newarr = [];
-		local l = ArraytoList(arr);
+		local l = ArrayToList(arr);
 		local loc1 = l.Begin();
 		l.RemoveValue(loc1);
 		newarr.append(loc1);

@@ -120,7 +120,7 @@ class SimpleSuppliesStrategy extends Strategy {
 
 		local route;
 		Debug("routes.len()=", routes.len());
-		foreach (route,_ in this.routes) {
+		foreach (route in this.routes) {
 			local station;
 			foreach (station in route.stations) {
 				local stationID = AIStation.GetStationID(station);
@@ -143,10 +143,10 @@ class SimpleSuppliesStrategy extends Strategy {
 			local obj;
 			if (r[3] <= TRUCK_MAX) {
 				obj = BuildTruckRoute(null, locations, cargo);
+				routes.append(obj);
 			} else {
 				obj = BuildNamedCargoLine(null, locations, cargo);
 			}
-			routes.append(obj);
 			tasks.append(obj);
 		}
 	}

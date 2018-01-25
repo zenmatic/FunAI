@@ -112,12 +112,14 @@ class SimpleSuppliesStrategy extends Strategy {
 	}
 
 	function Start() {
+		Debug("routes.len()=", routes.len());
 		Wake();
 	}
 
 	function Wake() {
 
 		local route;
+		Debug("routes.len()=", routes.len());
 		foreach (route,_ in this.routes) {
 			local station;
 			foreach (station in route.stations) {
@@ -135,13 +137,14 @@ class SimpleSuppliesStrategy extends Strategy {
 			local r = routelist.pop();
 			routes.append(r);
 			local cargo = r[0];
-			local producer = r[1];
-			local consumer = r[2];
+			local producer = AIIndustry.GetLocation(r[1]);
+			local consumer = AIIndustry.GetLocation(r[2]);
+			local locations = [producer, consumer];
 			local obj;
-			if (AITile.GetDistanceManhattanToTile(producer, consumer) <= TRUCK_MAX) {
-				obj = BuildTruckRoute(null, producer, consumer, cargo);
+			if (r[3] <= TRUCK_MAX) {
+				obj = BuildTruckRoute(null, locations, cargo);
 			} else {
-				obj = BuildNamedCargoLine(null, producer, consumer, cargo);
+				obj = BuildNamedCargoLine(null, locations, cargo);
 			}
 			routes.append(obj);
 			tasks.append(obj);

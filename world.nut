@@ -393,7 +393,7 @@ class WorldTiles {
 	function GetCount(tiletype) {
 		try {
 			return this.checks[tiletype].count;
-		} except e {
+		} catch (e) {
 			Debug("tiletype ", tiletype, " doesn't exist");
 			return null;
 		}
@@ -402,7 +402,7 @@ class WorldTiles {
 	function GetPercentage(tiletype) {
 		try {
 			return this.checks[tiletype].percent;
-		} except e {
+		} catch (e) {
 			Debug("tiletype ", tiletype, " doesn't exist");
 			return null;
 		}
@@ -431,14 +431,16 @@ class WorldTiles {
 			tlist.Valuate(tbl.func);
 			tlist.KeepValue(1);
 			local ct = tlist.Count();
+			local percent = (ct / this.totaltiles) * 100;
 			this.checks[tiletype].count = ct;
-			this.checks[tiletype].percent = (ct / this.totaltiles) * 100;
+			this.checks[tiletype].percent = percent;
+			Debug(tiletype, " count=", ct, " percent=", percent);
 		}
 	}
 
 	
 	function IsLandTile(tile) {
-		if (AITile.IsWaterTile(tile) || AITile.IsCoastTile(tile) {
+		if (AITile.IsWaterTile(tile) || AITile.IsCoastTile(tile)) {
 			return false;
 		}
 		return true;

@@ -679,10 +679,10 @@ class ExtendCrossing extends Builder {
 
 class Route extends Task {
 
-	locations = null;
+	locations = [];
 	cargo = null;
-	vgroup = null;
 	vtype = null;
+	vgroup = null;
 	stations = [];
 	depots = [];
 	vehicles = [];
@@ -695,10 +695,10 @@ class Route extends Task {
 		this.vtype = vtype;
 		this.vgroup = AIGroup.CreateGroup(vtype);
 
-		stations = [];
-		depots = [];
-		vehicles = [];
-		subtasks = [];
+		this.stations = [];
+		this.depots = [];
+		this.vehicles = [];
+		this.subtasks = [];
 	}
 	
 	function _tostring() {
@@ -800,15 +800,28 @@ class Route extends Task {
 		// 1 -> 2 -> 3 -> 4 -> 5 -> 4 -> 3 -> 2
 		local i;
 		local stops = [];
+		Debug("stops.len()=", stops.len());
 		stops.extend(stations);
+		Debug("stops.len()=", stops.len());
 		stops.extend(depots);
+		Debug("stops.len()=", stops.len());
 		stops = SortByDistance(stops);
+		Debug("stops.len()=", stops.len());
+		Debug("hi");
 		for (i=0; i < stops.len(); i++) {
+			Debug("stop is ", i, " ", stops[i]);
 			AddStation(veh, stops[i]);
 		}
 		for (i=i-1; i > 0; i--) {
 			AddStation(veh, stops[i]);
 		}
+		Debug("there");
+	}
+
+	function AddStation(veh, station) {
+		local flag = AIRoad.IsRoadDepotTile(station) ?
+			AIOrder.OF_SERVICE_IF_NEEDED : AIOrder.OF_NON_STOP_INTERMEDIATE;
+		AIOrder.AppendOrder(veh, station, flag);
 	}
 
 	function SortByDistance(arr) {

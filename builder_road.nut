@@ -33,9 +33,11 @@ class BuildRoad extends Task {
 	
 	function FindPath(a, b) {
 		local pathfinder = Road();
-		pathfinder.cost.max_bridge_length = 4;
-		pathfinder.cost.max_tunnel_length = 4;
+		//pathfinder.cost.max_bridge_length = 10;
+		//pathfinder.cost.max_tunnel_length = 10;
 		pathfinder.cost.max_cost = pathfinder.cost.tile * 4 * AIMap.DistanceManhattan(a, b);
+		Debug("max_cost=", pathfinder.cost.max_cost);
+		Debug("path from ", a, " to ", b);
 		
 		// Pathfinding needs money since it attempts to build in test mode.
 		// We can't get the price of a tunnel, but we can get it for a bridge
@@ -44,13 +46,20 @@ class BuildRoad extends Task {
 		if (GetBankBalance() < maxBridgeCost*2) {
 			throw NeedMoneyException(maxBridgeCost*2);
 		}
+		//local s1 = AISign.BuildSign(a, "X");
+		//local s2 = AISign.BuildSign(b, "Y");
 		
 		SetSecondarySign("Pathfinding...");
 		pathfinder.InitializePath([a], [b]);
 		local pathnum = AIMap.DistanceManhattan(a, b) * 3 * TICKS_PER_DAY;
 		pathnum = pathnum / 2;
+		if (pathnum > 1000) { pathnum = 1000 }
 		Debug("FindPath(", pathnum, ")");
-		return pathfinder.FindPath(pathnum);
+
+		local p = pathfinder.FindPath(pathnum);
+		//AISign.RemoveSign(s1);
+		//AISign.RemoveSign(s2);
+		return p;
 	}
 	
 	function BuildPath(path) {
@@ -111,7 +120,7 @@ class BuildTruckRoad extends BuildRoad {
 	function Run() {
 		SetConstructionSign(location1, this);
 		if (!path) path = FindPath(location1, location2);
-		ClearSecondarySign();
+		//ClearSecondarySign();
 		if (!path) throw TaskFailedException("no path");
 		BuildPath(path);
 	}

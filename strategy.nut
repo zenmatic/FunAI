@@ -105,14 +105,16 @@ class SimpleSuppliesStrategy extends Strategy {
 	maxdistance = 0;
 	mindistance = 0;
 	TRUCK_MAX = 80;
+	seenroutes = [];
 
 	constructor(min=20, max=50) {
 		maxdistance = max;
 		mindistance = min;
+
+		seenroutes = [];
 	}
 
 	function Start() {
-		Debug("routes.len()=", routes.len());
 		Wake();
 	}
 
@@ -122,6 +124,7 @@ class SimpleSuppliesStrategy extends Strategy {
 		Debug("routes.len()=", routes.len());
 		foreach (route in this.routes) {
 			local station;
+			/*
 			foreach (station in route.stations) {
 				local stationID = AIStation.GetStationID(station);
 				local rating = GetRating(stationID);
@@ -130,12 +133,13 @@ class SimpleSuppliesStrategy extends Strategy {
 					route.AddVehicleAtStation(station);
 				}
 			}
+			*/
 		}
 
 		local routelist = FindSupplyRoutes();
 		if (routelist.len() > 0) {
 			local r = routelist.pop();
-			routes.append(r);
+			seenroutes.append(r);
 			local cargo = r[0];
 			local producer = AIIndustry.GetLocation(r[1]);
 			local consumer = AIIndustry.GetLocation(r[2]);
@@ -197,7 +201,7 @@ class SimpleSuppliesStrategy extends Strategy {
 
 	function RouteTaken(cargo, pID, aID, dist) {
 		local r;
-		foreach (r in this.routes) {
+		foreach (r in this.seenroutes) {
 			if (r[0] == cargo && r[1] == pID && r[2] == aID && r[3] == dist) {
 				return true;
 			}

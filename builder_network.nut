@@ -772,9 +772,9 @@ class Route extends Task {
 
 	function AddVehicleAtStation(station) {
 		local s;
-		foreach (s,_ in this.stations) {
+		foreach (s in this.stations) {
 			if (s == station) {
-				local veh = AddVehicle(town);
+				local veh = AddVehicle(this.depots[0]);
 				AIOrder.ShareOrders(veh, vehicles[0]);
 				StartOrderAtStation(veh, s);
 				AIVehicle.StartStopVehicle(veh);
@@ -797,25 +797,24 @@ class Route extends Task {
 	// need to sort stations and depots by distance from one another
 	function AddOrders(veh) {
 
-		// 1 -> 2 -> 3 -> 4 -> 5 -> 4 -> 3 -> 2
 		local i;
 		local stops = [];
-		Debug("stops.len()=", stops.len());
-		stops.extend(stations);
-		Debug("stops.len()=", stops.len());
 		stops.extend(depots);
-		Debug("stops.len()=", stops.len());
+		stops.extend(stations);
 		stops = SortByDistance(stops);
-		Debug("stops.len()=", stops.len());
-		Debug("hi");
-		for (i=0; i < stops.len(); i++) {
+		local max = stops.len();
+
+		// 1 -> 2 -> 3 -> 4 -> 5 -> 4 -> 3 -> 2
+		for (i=0; i < max; i++) {
 			Debug("stop is ", i, " ", stops[i]);
 			AddStation(veh, stops[i]);
 		}
-		for (i=i-1; i > 0; i--) {
+		if (max <= 3) { return }
+
+		for (i=i-2; i > 0; i--) {
+			Debug("stop is ", i, " ", stops[i]);
 			AddStation(veh, stops[i]);
 		}
-		Debug("there");
 	}
 
 	function AddStation(veh, station) {
@@ -828,13 +827,13 @@ class Route extends Task {
 		local newarr = [];
 		local l = ArrayToList(arr);
 		local loc1 = l.Begin();
-		l.RemoveValue(loc1);
+		l.RemoveItem(loc1);
 		newarr.append(loc1);
 		while (l.Count() > 0) {
 			l.Valuate(AITile.GetDistanceManhattanToTile, loc1);
 			l.Sort(AIList.SORT_BY_VALUE, false);
 			local loc2 = l.Begin();
-			l.RemoveValue(loc2);
+			l.RemoveItem(loc2);
 			newarr.append(loc2);
 			loc1 = loc2;
 		}

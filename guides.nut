@@ -61,7 +61,7 @@ class VerySmallMapGuide extends GuidingStrategy {
 	constructor() {
 		strategies = [
 			MaxLoanStrategy(),
-			SimpleSuppliesStrategy(),
+			SimpleSuppliesStrategy(5, 20, 0, 1),
 			//BusesToPopularTowns(1),
 			//SubStrategy(),
 			ZeroLoanStrategy(),

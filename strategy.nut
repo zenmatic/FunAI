@@ -104,37 +104,63 @@ class SimpleSuppliesStrategy extends Strategy {
 	desc = "make supply routes which are somewhat close together";
 	maxdistance = 0;
 	mindistance = 0;
+	maxroutes = null;
+	interval = 1;
 	TRUCK_MAX = 80;
 	seenroutes = [];
+	lastroute = 0;
 
-	constructor(min=20, max=50) {
-		maxdistance = max;
-		mindistance = min;
+	// interval is a new route every N days
+	constructor(min=20, max=50, interval=100, maxroutes=100) {
+		this.maxdistance = max;
+		this.mindistance = min;
+		this.interval = interval;
+		this.maxroutes = maxroutes;
 
 		seenroutes = [];
 	}
 
 	function Start() {
-		Wake();
+		DoNewRoute();
 	}
 
 	function Wake() {
+		DoNewRoute();
 
+		// maintain existing routes
 		local route;
 		Debug("routes.len()=", routes.len());
 		foreach (route in this.routes) {
 			local station;
-			/*
 			foreach (station in route.stations) {
 				local stationID = AIStation.GetStationID(station);
-				local rating = GetRating(stationID);
-				if (rating < 65) {
-					Debug("Add another bus");
+				local rating = GetRating(stationID, route.cargo);
+				if (rating < 60) {
+					Debug("Add another vehicle to route");
 					route.AddVehicleAtStation(station);
 				}
 			}
-			*/
 		}
+	}
+
+	function NeedNewRoute() {
+		if (routes.len() >= maxroutes) {
+			Debug("reached max routes of ", maxroutes);
+			return false;
+		}
+
+		local now = AIDate.GetCurrentDate();
+		local min = lastroute + interval;
+		if (now < min) {
+			local diff = min - now;
+			Debug(diff, " days left til next interval");
+			return false;
+		}
+		return true;
+	}
+
+	function DoNewRoute() {
+		if (NeedNewRoute() == false) { return }
 
 		local routelist = FindSupplyRoutes();
 		if (routelist.len() > 0) {
@@ -152,6 +178,7 @@ class SimpleSuppliesStrategy extends Strategy {
 				obj = BuildNamedCargoLine(null, locations, cargo);
 			}
 			tasks.append(obj);
+			this.lastroute = AIDate.GetCurrentDate();
 		}
 	}
 

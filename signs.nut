@@ -9,7 +9,7 @@ function SetConstructionSign(tile, task) {
 		text = text.slice(0, space);
 	}
 	
-	text = "ChooChoo: " + text;
+	text = text;
 	
 	if (text.len() > 30) {
 		text = text.slice(0, 29);

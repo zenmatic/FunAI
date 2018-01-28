@@ -1,4 +1,4 @@
-function GetRating(stationID) {
+function GetRating(stationID, cargo) {
 	local rating = 100;
 	local sname = AIStation.GetName(stationID);
 	if (AIStation.HasCargoRating(stationID, cargo)) {

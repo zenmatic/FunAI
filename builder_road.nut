@@ -35,7 +35,7 @@ class BuildRoad extends Task {
 		local pathfinder = Road();
 		//pathfinder.cost.max_bridge_length = 10;
 		//pathfinder.cost.max_tunnel_length = 10;
-		pathfinder.cost.max_cost = pathfinder.cost.tile * 4 * AIMap.DistanceManhattan(a, b);
+		//pathfinder.cost.max_cost = pathfinder.cost.tile * 4 * AIMap.DistanceManhattan(a, b);
 		Debug("max_cost=", pathfinder.cost.max_cost);
 		Debug("path from ", a, " to ", b);
 		
@@ -54,6 +54,7 @@ class BuildRoad extends Task {
 		local pathnum = AIMap.DistanceManhattan(a, b) * 3 * TICKS_PER_DAY;
 		pathnum = pathnum / 2;
 		if (pathnum > 1000) { pathnum = 1000 }
+		if (pathnum < 100) { pathnum = 100 }
 		Debug("FindPath(", pathnum, ")");
 
 		local p = pathfinder.FindPath(pathnum);

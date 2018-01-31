@@ -106,7 +106,7 @@ class SimpleSuppliesStrategy extends Strategy {
 	mindistance = 0;
 	maxroutes = null;
 	interval = 1;
-	TRUCK_MAX = 80;
+	TRUCK_MAX = 40;
 	seenroutes = [];
 	lastroute = 0;
 
@@ -125,20 +125,13 @@ class SimpleSuppliesStrategy extends Strategy {
 	}
 
 	function Wake() {
-		DoNewRoute();
-
-		// maintain existing routes
-		local route;
-		Debug("routes.len()=", routes.len());
-		foreach (route in this.routes) {
-			local station;
-			foreach (station in route.stations) {
-				local stationID = AIStation.GetStationID(station);
-				local rating = GetRating(stationID, route.cargo);
-				if (rating < 60) {
-					Debug("Add another vehicle to route");
-					route.AddVehicleAtStation(station);
-				}
+		if (NeedNewRoute()) {
+			DoNewRoute();
+		} else {
+			Debug("maintain routes");
+			local route;
+			foreach (route in routes) {
+				route.Wake();
 			}
 		}
 	}
@@ -160,7 +153,6 @@ class SimpleSuppliesStrategy extends Strategy {
 	}
 
 	function DoNewRoute() {
-		if (NeedNewRoute() == false) { return }
 
 		local routelist = FindSupplyRoutes();
 		if (routelist.len() > 0) {
@@ -170,13 +162,8 @@ class SimpleSuppliesStrategy extends Strategy {
 			local producer = AIIndustry.GetLocation(r[1]);
 			local consumer = AIIndustry.GetLocation(r[2]);
 			local locations = [producer, consumer];
-			local obj;
-			if (r[3] <= TRUCK_MAX) {
-				obj = BuildTruckRoute(null, locations, cargo);
-				routes.append(obj);
-			} else {
-				obj = BuildNamedCargoLine(null, locations, cargo);
-			}
+			local obj = RateBasedRoute(null, locations, cargo);
+			routes.append(obj);
 			tasks.append(obj);
 			this.lastroute = AIDate.GetCurrentDate();
 		}
@@ -234,6 +221,70 @@ class SimpleSuppliesStrategy extends Strategy {
 			}
 		}
 		return false;
+	}
+}
+
+class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
+
+	function FindSupplyRoutes() {
+		local cargo, station;
+		local routelist = []; // pID, aID, distance between them
+		local stype = AIStation.STATION_TRUCK_STOP;
+		local stations = AIStationList(stype);
+		foreach (cargo in GenCargos()) {
+			if (AICargo.HasCargoClass(cargo, AICargo.CC_PASSENGERS)) {
+				continue;
+			} else if (!(AICargo.HasCargoClass(cargo, AICargo.CC_EXPRESS) ||
+				AICargo.HasCargoClass(cargo, AICargo.REFRIGERATED))) {
+				continue
+			}
+			foreach (station,_ in stations) {
+				local cargos = AIStationList_CargoPlannedByFrom(station,
+			}
+
+			local width = 1;
+			local height = 1;
+			local radius = 1;
+			//local num = AITile.GetCargoProduction(tile, cargo, width, height, radius);
+			//local num = AIIndustry.GetStockpiledCargo(industryID, cargo);
+			//local num = AIIndustry.GetAmountOfStationsAround(industryID);
+			local townID = AITile.GetClosestTown(tile);
+			local pID, aID;
+			foreach (pID,_ in producing) {
+				local ploc = AIIndustry.GetLocation(pID);
+				local acc2 = accepting;
+				foreach (aID,_ in acc2) {
+					if (pID == aID) continue;
+					local aloc = AIIndustry.GetLocation(aID);
+					local dist = AITile.GetDistanceManhattanToTile(ploc, aloc);
+					if (RouteTaken(cargo, pID, aID, dist)) {
+						continue;
+					} else if (dist >= this.mindistance && dist <= this.maxdistance) {
+						local arr = [ cargo, pID, aID, dist ];
+						routelist.append(arr);
+					}
+				}
+			}
+		}
+
+		local sortfunc = function(a,b) {
+			if (a[3] > b[3]) return 1;
+			else if (a[3] < b[3]) return -1;
+			return 0;
+		}
+
+		Debug("routelist.len() is ", routelist.len());
+		if (routelist.len() > 0) {
+			routelist.sort(sortfunc);
+			local r;
+			foreach (r in routelist) {
+				local pname = AIIndustry.GetName(r[1]);
+				local aname = AIIndustry.GetName(r[2]);
+				local dist = r[2];
+				Debug("distance from ", pname, " to ", aname, " is ", dist);
+			}
+		}
+		return routelist;
 	}
 }
 
@@ -408,12 +459,12 @@ class SubStrategy extends Strategy {
 
 	function Wake() {
 		local route;
-		foreach (route,_ in this.routes) {
+		foreach (route in this.routes) {
 			local station;
-			foreach (station,_ in stations) {
+			foreach (station in route.stations) {
 				local stationID = AIStation.GetStationID(station);
-				local rating = GetRating(stationID);
-				if (rating < 65) {
+				local rating = GetRating(stationID, route.cargo);
+				if (rating < 50) {
 					Debug("Add another bus");
 					route.AddVehicleAtStation(station);
 				}

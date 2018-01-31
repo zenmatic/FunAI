@@ -840,3 +840,80 @@ class Route extends Task {
 		return newarr;
 	}
 }
+
+class RateBasedRoute extends Route {
+
+	depotct = 1;
+
+	function Wake() {
+		local station;
+		foreach (station in stations) {
+			local stationID = AIStation.GetStationID(station);
+			local rating = GetRating(stationID, cargo);
+			if (rating < 50) {
+				Debug("Add another vehicle to route");
+				AddVehicleAtStation(station);
+			}
+
+			local vct = vehicles.len();
+			Debug("((vct / 4.0) > this.depotct) is " + ((vct / 4.0) > this.depotct));
+			if ((vct / 4.0) > this.depotct) {
+				Debug("expand the station");
+				ret = ExpandStation();
+				if (ret == true) {
+					this.depotct++;
+				}
+			}
+		}
+	}
+
+	function ExpandStation(stationloc) {
+		local ret = false;
+
+		local stationfront = AIRoad.GetRoadStationFrontTile(stationloc);
+		local stationID = AIStation.GetStationID(stationloc);
+		local roadtype = AIRoad.ROADVEHTYPE_TRUCK;
+
+		local tiles = AITileList();
+		SafeAddRectangle(tiles, stationloc, 0, 2);
+		tiles.RemoveValue(stationloc);
+		tiles.Valuate(AITile.IsBuildable);
+		tiles.KeepValue(1);
+		tiles.Valuate(AITile.GetSlope);
+		tiles.KeepValue(AITile.SLOPE_FLAT);
+		tiles.Valuate(AITile.GetDistanceManhattanToTile, stationloc);
+		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+		Debug("tile count=", tiles.Count());
+		if (tiles.IsEmpty()) {
+			Debug("no available tiles found");
+			return false;
+		}
+
+		local t, front;
+		local i = 1;
+		local succ = false;
+		for (t = tiles.Begin(); !tiles.IsEnd(); t = tiles.Next()) {
+			local x = AIMap.GetTileX(t) + 1;
+			local y = AIMap.GetTileY(t);
+			front =  AIMap.GetTileIndex(x, y);
+			ret = AIRoad.BuildRoadStation(t, front, roadtype, stationID);
+			Debug("t=", t, " front=", front, " roadtype=", roadtype);	
+			PrintError(ret);
+			if (ret) {
+				succ = true;
+				break;
+			}
+			//AISign.BuildSign(t, ""+i);
+			//i++;
+		}
+		if (succ == true) {
+			subtasks.extend([
+				BuildRoad(stationfront, front),
+				BuildRoad(t, front),
+			]);
+			RunSubtasks();
+		}
+		return ret;
+
+	}
+}

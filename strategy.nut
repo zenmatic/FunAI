@@ -224,68 +224,115 @@ class SimpleSuppliesStrategy extends Strategy {
 	}
 }
 
+// supply towns with goods like food, fruit, or goods
 class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
+	desc = "supply towns with food or goods";
+
+	function DoNewRoute() {
+
+		local routelist = FindSupplyRoutes();
+		if (routelist.len() > 0) {
+			local r = routelist.pop();
+			local cargo = r[0];
+			local producer = AIIndustry.GetLocation(r[1]);
+			local townID = r[4];
+
+
+			local bobj = BuildBusStationInTown(null, townID, cargo);
+			bobj.Run();
+			if (bojb.station == null) {
+				return;
+			}
+			local consumer = bobj.station;
+
+			seenroutes.append(r);
+			local locations = [producer, consumer];
+			local obj = RateBasedRoute(null, locations, cargo);
+			routes.append(obj);
+			tasks.append(obj);
+			this.lastroute = AIDate.GetCurrentDate();
+		}
+	}
+
+	function IsCargoGood(cargo) {
+		local te = AICargo.GetTownEffect(cargo);
+		if (AICargo.IsValidTownEffect(te)) {
+			Debug("is a valid town effect");
+			if (te == AICargo.TE_GOODS) {
+				Debug("towns are effected by goods");
+				return true;
+			} else if (te == AICargo.TE_FOOD) {
+				Debug("towns are effected by food");
+				return true;
+			}
+		}
+		return false;
+	}
 
 	function FindSupplyRoutes() {
-		local cargo, station;
 		local routelist = []; // pID, aID, distance between them
-		local stype = AIStation.STATION_TRUCK_STOP;
-		local stations = AIStationList(stype);
-		foreach (cargo in GenCargos()) {
-			if (AICargo.HasCargoClass(cargo, AICargo.CC_PASSENGERS)) {
-				continue;
-			} else if (!(AICargo.HasCargoClass(cargo, AICargo.CC_EXPRESS) ||
-				AICargo.HasCargoClass(cargo, AICargo.REFRIGERATED))) {
-				continue
-			}
-			foreach (station,_ in stations) {
-				local cargos = AIStationList_CargoPlannedByFrom(station,
-			}
 
-			local width = 1;
-			local height = 1;
-			local radius = 1;
-			//local num = AITile.GetCargoProduction(tile, cargo, width, height, radius);
-			//local num = AIIndustry.GetStockpiledCargo(industryID, cargo);
-			//local num = AIIndustry.GetAmountOfStationsAround(industryID);
-			local townID = AITile.GetClosestTown(tile);
-			local pID, aID;
-			foreach (pID,_ in producing) {
-				local ploc = AIIndustry.GetLocation(pID);
-				local acc2 = accepting;
-				foreach (aID,_ in acc2) {
-					if (pID == aID) continue;
-					local aloc = AIIndustry.GetLocation(aID);
-					local dist = AITile.GetDistanceManhattanToTile(ploc, aloc);
-					if (RouteTaken(cargo, pID, aID, dist)) {
+		foreach (cargo in GenCargos()) {
+			if (!IsCargoGood(cargo)) { continue }
+
+			local cname = AICargo.GetCargoLabel(cargo);
+			Debug("looking for industries with cargo ", cname);
+			local industries = AIIndustryList_CargoProducing(cargo);
+			Debug("found ", industries.Count(), " of them");
+			foreach (industry,_ in industries) {
+				local pID = FindStationNearIndustry(industry);
+				if (pID != null) {
+					Debug("Found station near ", AIIndustry.GetName(industry));
+					local stationloc = AIIndustry.GetLocation(pID);
+					local townID = AITile.GetClosestTown(stationloc);
+					local dist = AITown.GetDistanceManhattanToTile(townID, stationloc);
+					Debug("stationloc=", stationloc, " townID=", townID, " dist=", dist);
+					if (RouteTaken(cargo, pID, townID)) {
 						continue;
 					} else if (dist >= this.mindistance && dist <= this.maxdistance) {
-						local arr = [ cargo, pID, aID, dist ];
+						local arr = [ cargo, pID, aID, dist, townID ];
 						routelist.append(arr);
 					}
 				}
 			}
 		}
-
-		local sortfunc = function(a,b) {
-			if (a[3] > b[3]) return 1;
-			else if (a[3] < b[3]) return -1;
-			return 0;
-		}
-
-		Debug("routelist.len() is ", routelist.len());
-		if (routelist.len() > 0) {
-			routelist.sort(sortfunc);
-			local r;
-			foreach (r in routelist) {
-				local pname = AIIndustry.GetName(r[1]);
-				local aname = AIIndustry.GetName(r[2]);
-				local dist = r[2];
-				Debug("distance from ", pname, " to ", aname, " is ", dist);
-			}
-		}
 		return routelist;
 	}
+
+	function FindStationNearIndustry(industryID) {
+		local tiles = AITileList_IndustryProducing(industryID, 3);
+		Debug("Count is ", tiles.Count());
+		tiles.Valuate(AIRoad.IsRoadStationTile);
+		tiles.KeepValue(1);
+		if (tiles.Count() < 1) {
+			Debug("no stations found");
+			return null;
+		}
+
+		local stype = AIStation.STATION_TRUCK_STOP;
+		local stations = AIStationList(stype);
+		local station;
+		foreach (station,_ in stations) {
+			local tile;
+			foreach (tile,_ in tiles) {
+				if (tile == station) {
+					return station;
+				}
+			}
+		}
+		return null;
+	}
+
+	function RouteTaken(cargo, pID, townID) {
+		local r;
+		foreach (r in this.seenroutes) {
+			if (r[0] == cargo && r[1] == pID && r[2] == aID && r[3] == dist) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }
 
 class BasicCoalStrategy extends Strategy {

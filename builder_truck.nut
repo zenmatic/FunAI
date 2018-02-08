@@ -204,6 +204,16 @@ class BuildTruckStation extends Task {
 
 	function Run() {
 
+		// if location is already a station, just return
+		if (AIRoad.IsRoadStationTile(location)) {
+			local sID = AIStation.GetStationID(location);
+			if (AIStation.IsValidStation(sID)) {
+				Debug("station is now ", location);
+				this.station = location;
+				return;
+			}
+		}
+
 		local tiles = AITileList();
 		SafeAddRectangle(tiles, location, 2);
 		tiles.RemoveValue(location);
@@ -232,7 +242,6 @@ class BuildTruckStation extends Task {
 			}
 		}
 	}
-
 }
 
 class BuildTruckDepot extends Task {

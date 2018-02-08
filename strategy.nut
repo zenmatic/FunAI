@@ -234,13 +234,12 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 		if (routelist.len() > 0) {
 			local r = routelist.pop();
 			local cargo = r[0];
-			local producer = AIIndustry.GetLocation(r[1]);
-			local townID = r[4];
+			local producer = r[1];
+			local townID = r[2];
 
-
-			local bobj = BuildBusStationInTown(null, townID, cargo);
+			local bobj = BuildStopInTown(null, townID, cargo);
 			bobj.Run();
-			if (bojb.station == null) {
+			if (bobj.station == null) {
 				return;
 			}
 			local consumer = bobj.station;
@@ -281,18 +280,17 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 			Debug("found ", industries.Count(), " of them");
 			foreach (industry,_ in industries) {
 				local pID = FindStationNearIndustry(industry);
-				if (pID != null) {
-					Debug("Found station near ", AIIndustry.GetName(industry));
-					local stationloc = AIIndustry.GetLocation(pID);
-					local townID = AITile.GetClosestTown(stationloc);
-					local dist = AITown.GetDistanceManhattanToTile(townID, stationloc);
-					Debug("stationloc=", stationloc, " townID=", townID, " dist=", dist);
-					if (RouteTaken(cargo, pID, townID)) {
-						continue;
-					} else if (dist >= this.mindistance && dist <= this.maxdistance) {
-						local arr = [ cargo, pID, aID, dist, townID ];
-						routelist.append(arr);
-					}
+				if (pID == null) { continue }
+				Debug("Found station near ", AIIndustry.GetName(industry));
+				local stationloc = AIStation.GetLocation(pID);
+				local townID = AITile.GetClosestTown(stationloc);
+				local dist = AITown.GetDistanceManhattanToTile(townID, stationloc);
+				Debug("stationloc=", stationloc, " townID=", townID, " dist=", dist);
+				if (RouteTaken(cargo, pID, townID)) {
+					continue;
+				} else if (dist >= this.mindistance && dist <= this.maxdistance) {
+					local arr = [ cargo, stationloc, townID, dist ];
+					routelist.append(arr);
 				}
 			}
 		}
@@ -302,8 +300,13 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 	function FindStationNearIndustry(industryID) {
 		local tiles = AITileList_IndustryProducing(industryID, 3);
 		Debug("Count is ", tiles.Count());
+		local tile;
+		foreach (tile in tiles) {
+			AISign.BuildSign(tile, "X");
+		}
 		tiles.Valuate(AIRoad.IsRoadStationTile);
 		tiles.KeepValue(1);
+		Debug("Count after IsRoadStationTile() is ", tiles.Count());
 		if (tiles.Count() < 1) {
 			Debug("no stations found");
 			return null;
@@ -311,11 +314,13 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 
 		local stype = AIStation.STATION_TRUCK_STOP;
 		local stations = AIStationList(stype);
+		Debug("stations.Count() is ", stations.Count());
 		local station;
 		foreach (station,_ in stations) {
 			local tile;
+			local stationloc = AIStation.GetLocation(station);
 			foreach (tile,_ in tiles) {
-				if (tile == station) {
+				if (tile == stationloc) {
 					return station;
 				}
 			}

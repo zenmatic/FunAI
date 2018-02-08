@@ -1,3 +1,33 @@
+class TestCargoRoute extends Strategy {
+	desc = "make a cargo route";
+	cargo = null;
+
+	constructor(cargo) {
+		this.cargo = cargo;
+	}
+
+	function Start() {
+		local producing = AIIndustryList_CargoProducing(this.cargo);
+		producing.Valuate(AIIndustry.IsBuiltOnWater);
+		producing.RemoveValue(1);
+		Debug("len is ", producing.Count());
+		local pID = producing.Begin();
+		Debug("name is ", AIIndustry.GetName(pID));
+		local ploc = AIIndustry.GetLocation(pID);
+
+		local accepting = AIIndustryList_CargoAccepting(this.cargo);
+		accepting.Valuate(AIIndustry.GetDistanceManhattanToTile, ploc);
+		accepting.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+		local cID = accepting.Begin();
+		Debug("nearest accepting industry is ", AIIndustry.GetName(cID));
+		local cloc = AIIndustry.GetLocation(cID);
+		local locations = [ ploc, cloc ];
+
+		tasks = [ RateBasedRoute(null, locations, this.cargo) ];
+		RunTasks();
+	}
+}
+
 class TestBusRoute extends Strategy {
 	desc = "test a bus route";
 

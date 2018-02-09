@@ -5,7 +5,7 @@ function GetRating(stationID, cargo) {
 		rating = AIStation.GetCargoRating(stationID, cargo);
 		Debug("rating at ", sname, " station is ", rating);
 	} else {
-		Debug("station ", sname, " has no rating");
+		//Debug("station ", sname, " has no rating");
 	}
 	return rating;
 }
@@ -194,6 +194,7 @@ function GenCargos()
 	foreach (cID,z in clist) {
 		cname = AICargo.GetCargoLabel(cID);
 		cargoIDs[cname] <- cID;
+		//Debug(cname + "=" + cID);
 		debugstr += " " + cname + "=" + cID;
 	}
 	Debug(debugstr);

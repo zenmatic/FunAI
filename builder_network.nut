@@ -856,10 +856,10 @@ class RateBasedRoute extends Route {
 			}
 
 			local vct = vehicles.len();
-			Debug("((vct / 4.0) > this.depotct) is " + ((vct / 4.0) > this.depotct));
+			//Debug("((vct / 4.0) > this.depotct) is " + ((vct / 4.0) > this.depotct));
 			if ((vct / 4.0) > this.depotct) {
 				Debug("expand the station");
-				ret = ExpandStation();
+				local ret = ExpandStation(station);
 				if (ret == true) {
 					this.depotct++;
 				}
@@ -885,17 +885,18 @@ class RateBasedRoute extends Route {
 		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
 		Debug("tile count=", tiles.Count());
 		if (tiles.IsEmpty()) {
-			Debug("no available tiles found");
+			Debug("no available tiles found to expand station");
 			return false;
 		}
 
 		local t, front;
 		local i = 1;
 		local succ = false;
-		for (t = tiles.Begin(); !tiles.IsEnd(); t = tiles.Next()) {
+		foreach (t,_ in tiles) {
 			local x = AIMap.GetTileX(t) + 1;
 			local y = AIMap.GetTileY(t);
 			front =  AIMap.GetTileIndex(x, y);
+			if (!AITile.IsBuildable(front)) { continue }
 			ret = AIRoad.BuildRoadStation(t, front, roadtype, stationID);
 			Debug("t=", t, " front=", front, " roadtype=", roadtype);	
 			PrintError(ret);
@@ -907,10 +908,10 @@ class RateBasedRoute extends Route {
 			//i++;
 		}
 		if (succ == true) {
-			subtasks.extend([
-				BuildRoad(stationfront, front),
-				BuildRoad(t, front),
-			]);
+			subtasks = [
+				BuildTruckRoad(this, stationfront, front),
+				BuildTruckRoad(this, t, front),
+			];
 			RunSubtasks();
 		}
 		return ret;

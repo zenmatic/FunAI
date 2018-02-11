@@ -23,8 +23,17 @@ class TestCargoRoute extends Strategy {
 		local cloc = AIIndustry.GetLocation(cID);
 		local locations = [ ploc, cloc ];
 
-		tasks = [ RateBasedRoute(null, locations, this.cargo) ];
+		local r = RateBasedRoute(null, locations, this.cargo);
+		routes.append(r);
+		tasks = [ r ];
 		RunTasks();
+	}
+
+	function Wake() {
+		local r;
+		foreach (r in routes) {
+			r.Wake();
+		}
 	}
 }
 

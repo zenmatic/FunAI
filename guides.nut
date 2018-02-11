@@ -59,11 +59,15 @@ class VerySmallMapGuide extends GuidingStrategy {
 	desc = "strategies for 64x64 maps";
 
 	constructor() {
+		local cargos = GenCargos();
+		local fruit = cargos.GRAI;
 		strategies = [
 			MaxLoanStrategy(),
-			SimpleSuppliesStrategy(5, 30, 100, 1),
+			SimpleSuppliesStrategy(5, 30, 200, 5),
 			//BusesToPopularTowns(1),
 			//SubStrategy(),
+			//TestCargoRoute(fruit),
+			AuxSuppliesStrategy(5, 30, 365, 5),
 			ZeroLoanStrategy(),
 		];
 	}

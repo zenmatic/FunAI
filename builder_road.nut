@@ -10,7 +10,7 @@ class BuildRoad extends Task {
 		Task.constructor(parentTask);
 		this.stationTile = stationTile;
 		this.town = town;
-		this.path = null;
+		//this.path = null;
 	}
 	
 	function _tostring() {

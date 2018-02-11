@@ -858,11 +858,8 @@ class RateBasedRoute extends Route {
 			local vct = vehicles.len();
 			//Debug("((vct / 4.0) > this.depotct) is " + ((vct / 4.0) > this.depotct));
 			if ((vct / 4.0) > this.depotct) {
-				Debug("expand the station");
+				Debug(vct, " vehicles, try to expand the station");
 				local ret = ExpandStation(station);
-				if (ret == true) {
-					this.depotct++;
-				}
 			}
 		}
 	}
@@ -875,9 +872,9 @@ class RateBasedRoute extends Route {
 		local roadtype = AIRoad.ROADVEHTYPE_TRUCK;
 
 		local tiles = AITileList();
-		SafeAddRectangle(tiles, stationloc, 0, 2);
-		tiles.RemoveValue(stationloc);
-		tiles.Valuate(AITile.IsBuildable);
+		SafeAddRectangle(tiles, stationfront, 3);
+		tiles.RemoveValue(stationfront);
+		tiles.Valuate(AIRoad.IsRoadTile);
 		tiles.KeepValue(1);
 		tiles.Valuate(AITile.GetSlope);
 		tiles.KeepValue(AITile.SLOPE_FLAT);
@@ -891,30 +888,34 @@ class RateBasedRoute extends Route {
 
 		local t, front;
 		local i = 1;
-		local succ = false;
-		foreach (t,_ in tiles) {
-			local x = AIMap.GetTileX(t) + 1;
-			local y = AIMap.GetTileY(t);
-			front =  AIMap.GetTileIndex(x, y);
-			if (!AITile.IsBuildable(front)) { continue }
-			ret = AIRoad.BuildRoadStation(t, front, roadtype, stationID);
-			Debug("t=", t, " front=", front, " roadtype=", roadtype);	
-			PrintError(ret);
-			if (ret) {
-				succ = true;
-				break;
+		foreach (front,_ in tiles) {
+			foreach (t,_ in FindPlaceAlongRoad(front)) {
+				ret = AIRoad.BuildRoadStation(t, front, roadtype, stationID);
+				PrintError(ret);
+				if (ret) {
+					this.depotct++;
+					subtasks = [
+						BuildTruckRoad(this, stationfront, front),
+						BuildTruckRoad(this, t, front),
+					];
+					RunSubtasks();
+					return ret;
+				}
 			}
-			//AISign.BuildSign(t, ""+i);
-			//i++;
-		}
-		if (succ == true) {
-			subtasks = [
-				BuildTruckRoad(this, stationfront, front),
-				BuildTruckRoad(this, t, front),
-			];
-			RunSubtasks();
 		}
 		return ret;
+	}
 
+	function FindPlaceAlongRoad(front) {
+		local tiles = AITileList();
+		SafeAddRectangle(tiles, front, 1);
+		tiles.RemoveValue(front);
+		tiles.Valuate(AIRoad.IsRoadTile);
+		tiles.RemoveValue(1);
+		tiles.Valuate(AITile.IsBuildable);
+		tiles.KeepValue(1);
+		tiles.Valuate(AITile.GetSlope);
+		tiles.KeepValue(AITile.SLOPE_FLAT);
+		return tiles;
 	}
 }

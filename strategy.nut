@@ -128,7 +128,6 @@ class SimpleSuppliesStrategy extends Strategy {
 		if (NeedNewRoute()) {
 			DoNewRoute();
 		} else {
-			Debug("maintain routes");
 			local route;
 			foreach (route in routes) {
 				route.Wake();
@@ -256,12 +255,12 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 	function IsCargoGood(cargo) {
 		local te = AICargo.GetTownEffect(cargo);
 		if (AICargo.IsValidTownEffect(te)) {
-			Debug("is a valid town effect");
+			//Debug("is a valid town effect");
 			if (te == AICargo.TE_GOODS) {
-				Debug("towns are effected by goods");
+				//Debug("towns are effected by goods");
 				return true;
 			} else if (te == AICargo.TE_FOOD) {
-				Debug("towns are effected by food");
+				//Debug("towns are effected by food");
 				return true;
 			}
 		}
@@ -786,5 +785,184 @@ class TransferStrategy extends Strategy {
 			type = AISubsidy.SPT_TOWN,
 		}
 		tasks.append(BuildTransferCargoLine(null, producer_info, consumer_info, cargo));
+	}
+}
+
+class ExpandTowns extends Strategy {
+	desc = "expand towns by adding streets";
+	minpopulation = 0;
+	maxpopulation = 1000;
+	interval = 0;
+	lasttime = 0;
+
+	// interval is a new route every N days
+	constructor(min=1, max=1000, interval=30) {
+		this.maxpopulation = max;
+		this.minpopulation = min;
+		this.interval = interval;
+	}
+
+	function GoTime() {
+		local now = AIDate.GetCurrentDate();
+		local min = lasttime + interval;
+		if (now < min) {
+			local diff = min - now;
+			Debug(diff, " days left til next interval");
+			return false;
+		}
+		lasttime = now;
+		return true;
+	}
+
+	function Wake() {
+		if (!GoTime()) { return }
+
+		local towns = AITownList();
+		towns.Valuate(AITown.GetPopulation);
+		towns.KeepBetweenValue(minpopulation, maxpopulation);
+
+		local valfunc = function(tile, townID) {
+			return AITown.IsWithinTownInfluence(townID, tile);
+		}
+
+		local town;
+		foreach (town,_ in towns) {
+			Debug("try to expand ", AITown.GetName(town));
+			local tiles = AITileList();
+			SafeAddRectangle(tiles, AITown.GetLocation(town), 40);
+			tiles.Valuate(valfunc, town);
+			tiles.KeepValue(1);
+			local ret = CrossStreet(tiles);
+		}
+	}
+
+	function CrossStreet(tiles) {
+		tiles.Valuate(AIRoad.IsRoadTile);
+		tiles.KeepValue(1);
+		tiles.Valuate(AIMap.GetTileX);
+		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+		local tile;
+		foreach (tile,_ in tiles) {
+			local ret = CrossX(tile);
+			if (ret) { return true }
+			local ret = CrossY(tile);
+			if (ret) { return true }
+		}
+		return false;
+	}
+
+	function CrossX(start) {
+		local startx = AIMap.GetTileX(start);
+		local y = AIMap.GetTileY(start);
+
+		//local signs = [];
+		//local signID = AISign.BuildSign(start, "S");
+		//signs.append(signID);
+
+		local succ = true;
+		local i, tile;
+		for (i=1; i < 4; i++) {
+			local x = startx + i;
+			tile = AIMap.GetTileIndex(x,y);
+			if (!AIMap.IsValidTile(tile)) {
+				succ = false;
+				break;
+			}
+			//local signID = AISign.BuildSign(tile, ""+i);
+			//signs.append(signID);
+			if (!AITile.IsBuildable(tile) ||
+				AITile.GetSlope(tile) != AITile.SLOPE_FLAT) {
+				succ = false;
+				break;
+			}
+		}
+		local end = AIMap.GetTileIndex(startx + i, y);
+		//local sign;
+		//foreach (sign in signs) {
+			//AISign.RemoveSign(sign);
+		//}
+		if (succ && AIMap.IsValidTile(end) && AIRoad.IsRoadTile(end)) {
+			return AIRoad.BuildRoad(start, end);
+		}
+		return false;
+	}
+
+	function CrossY(start) {
+		local starty = AIMap.GetTileY(start);
+		local x = AIMap.GetTileX(start);
+
+		//local signs = [];
+		//local signID = AISign.BuildSign(start, "S");
+		//signs.append(signID);
+
+		local succ = true;
+		local i, tile;
+		for (i=1; i < 4; i++) {
+			local y = starty + i;
+			tile = AIMap.GetTileIndex(x,y);
+			if (!AIMap.IsValidTile(tile)) {
+				succ = false;
+				break;
+			}
+			//local signID = AISign.BuildSign(tile, ""+i);
+			//signs.append(signID);
+			if (!AITile.IsBuildable(tile) ||
+				AITile.GetSlope(tile) != AITile.SLOPE_FLAT) {
+				succ = false;
+				break;
+			}
+		}
+		local end = AIMap.GetTileIndex(x, starty + i);
+		//local sign;
+		//foreach (sign in signs) {
+			//AISign.RemoveSign(sign);
+		//}
+		if (succ && AIMap.IsValidTile(end) && AIRoad.IsRoadTile(end)) {
+			return AIRoad.BuildRoad(start, end);
+		}
+		return false;
+	}
+
+	function TryCrossStreet(tile1, tile2) {
+		local x1 = AIMap.GetTileX(tile1);
+		local x2 = AIMap.GetTileX(tile2);
+		if (abs(x1 - x2) != 4) { return false }
+		local start, end;
+		if (x1 < x2) {
+			start = tile1;
+			end = tile2;
+		} else {
+			start = tile2;
+			end = tile1;
+		}
+		local startx = AIMap.GetTileX(start);
+		local y = AIMap.GetTileY(start);
+		local succ = true;
+		local signs = [];
+		local signID = AISign.BuildSign(start, "S");
+		signs.append(signID);
+		local signID = AISign.BuildSign(end, "E");
+		signs.append(signID);
+		local i;
+		for (i=1; i < 4; i++) {
+			local x = startx + i;
+			local tile = AIMap.GetTileIndex(x,y);
+			local signID = AISign.BuildSign(tile, ""+i);
+			signs.append(signID);
+			if (!AITile.IsBuildable(tile) ||
+				AITile.GetSlope(tile) != AITile.SLOPE_FLAT) {
+				succ = false;
+				break;
+			}
+		}
+		local sign;
+		foreach (sign in signs) {
+			AISign.RemoveSign(sign);
+		}
+		if (succ) {
+			return AIRoad.BuildRoad(start, end);
+		}
+
+		return false;
 	}
 }

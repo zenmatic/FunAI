@@ -3,7 +3,7 @@ function GetRating(stationID, cargo) {
 	local sname = AIStation.GetName(stationID);
 	if (AIStation.HasCargoRating(stationID, cargo)) {
 		rating = AIStation.GetCargoRating(stationID, cargo);
-		Debug("rating at ", sname, " station is ", rating);
+		//Debug("rating at ", sname, " station is ", rating);
 	} else {
 		//Debug("station ", sname, " has no rating");
 	}

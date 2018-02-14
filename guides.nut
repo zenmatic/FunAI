@@ -17,7 +17,7 @@ class GuidingStrategy {
 		local strat;
 		Debug("number of strategies are ", strategies.len());
 		foreach (strat in strategies) {
-			Debug("strategy: action ", action, " on ", strat.desc);
+			//Debug("strategy: action ", action, " on ", strat.desc);
 			try {
 				if (action == "Start") {
 					strat.Start();
@@ -63,6 +63,7 @@ class VerySmallMapGuide extends GuidingStrategy {
 		local fruit = cargos.GRAI;
 		strategies = [
 			MaxLoanStrategy(),
+			ExpandTowns(1,1000, 30),
 			SimpleSuppliesStrategy(5, 30, 200, 5),
 			//BusesToPopularTowns(1),
 			//SubStrategy(),

@@ -685,6 +685,7 @@ class Route extends Task {
 	vgroup = null;
 	stations = [];
 	depots = [];
+	maxvehicles = 10;
 	vehicles = [];
 	subtasks = [];
 
@@ -694,11 +695,7 @@ class Route extends Task {
 		this.cargo = cargo;
 		this.vtype = vtype;
 		this.vgroup = AIGroup.CreateGroup(vtype);
-
-		this.stations = [];
-		this.depots = [];
-		this.vehicles = [];
-		this.subtasks = [];
+		subtasks = [];
 	}
 	
 	function _tostring() {
@@ -763,6 +760,10 @@ class Route extends Task {
 	}
 
 	function AddVehicle(depot) {
+		if (maxvehicles > 0 && vehicles.len() >= maxvehicles) {
+			local msg = "Max vehicles of " + maxvehicles + " reached";
+			throw TaskRouteTooManyVehicles(msg);
+		}
 		local eID = AllocateTruck(this.cargo);
 		local veh = AIVehicle.BuildVehicle(depot, eID);
 		vehicles.append(veh);

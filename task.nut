@@ -13,6 +13,9 @@ class TaskFailedException {
 	}
 }
 
+class TaskRouteTooManyVehicles extends TaskFailedException {
+}
+
 class TaskRetryException {
 	sleep = 0;
 	

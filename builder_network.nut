@@ -695,7 +695,11 @@ class Route extends Task {
 		this.cargo = cargo;
 		this.vtype = vtype;
 		this.vgroup = AIGroup.CreateGroup(vtype);
-		subtasks = [];
+
+		this.stations = [];
+		this.depots = [];
+		this.vehicles = [];
+		this.subtasks = [];
 	}
 	
 	function _tostring() {
@@ -749,6 +753,7 @@ class Route extends Task {
 		RunSubtasks();
 
 		local veh = AddVehicle(depot);
+		Debug("vehicle count is", vehicles.len());
 		if (vehicles.len() == 1) {
 			// only give orders to the first vehicle
 			// the rest just share those orders
@@ -807,7 +812,8 @@ class Route extends Task {
 
 		// 1 -> 2 -> 3 -> 4 -> 5 -> 4 -> 3 -> 2
 		for (i=0; i < max; i++) {
-			Debug("stop is ", i, " ", stops[i]);
+			local sID = AIStation.GetStationID(stops[i]);
+			Debug("stop is", i, stops[i], AIStation.GetName(sID));
 			AddStation(veh, stops[i]);
 		}
 		if (max <= 3) { return }
@@ -844,7 +850,12 @@ class Route extends Task {
 
 class RateBasedRoute extends Route {
 
+	desc = "Route that expands number of stations based on cargo rating";
 	depotct = 1;
+
+	function _tostring() {
+		return "RateBasedRoute";
+	}
 
 	function Wake() {
 		local station;

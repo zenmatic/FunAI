@@ -117,7 +117,7 @@ class SimpleSuppliesStrategy extends Strategy {
 		this.interval = interval;
 		this.maxroutes = maxroutes;
 
-		seenroutes = [];
+		this.seenroutes = [];
 	}
 
 	function Start() {
@@ -145,7 +145,7 @@ class SimpleSuppliesStrategy extends Strategy {
 		local min = lastroute + interval;
 		if (now < min) {
 			local diff = min - now;
-			Debug(diff, " days left til next interval");
+			//Debug(diff, " days left til next interval");
 			return false;
 		}
 		return true;
@@ -274,7 +274,7 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 			if (!IsCargoGood(cargo)) { continue }
 
 			local cname = AICargo.GetCargoLabel(cargo);
-			Debug("looking for industries with cargo ", cname);
+			Debug("looking for aux industries with cargo ", cname);
 			local industries = AIIndustryList_CargoProducing(cargo);
 			Debug("found ", industries.Count(), " of them");
 			foreach (industry,_ in industries) {
@@ -807,7 +807,7 @@ class ExpandTowns extends Strategy {
 		local min = lasttime + interval;
 		if (now < min) {
 			local diff = min - now;
-			Debug(diff, " days left til next interval");
+			//Debug(diff, " days left til next interval");
 			return false;
 		}
 		lasttime = now;
@@ -827,7 +827,7 @@ class ExpandTowns extends Strategy {
 
 		local town;
 		foreach (town,_ in towns) {
-			Debug("try to expand ", AITown.GetName(town));
+			//Debug("try to expand ", AITown.GetName(town));
 			local tiles = AITileList();
 			SafeAddRectangle(tiles, AITown.GetLocation(town), 40);
 			tiles.Valuate(valfunc, town);

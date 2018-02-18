@@ -169,7 +169,7 @@ class FunAI extends AIController
 
 		local guide;
 		foreach (guide in this.guides) {
-			Debug("guides " + guide.desc + ".Wake()");
+			//Debug("guides " + guide.desc + ".Wake()");
 			guide.Wake();
 		}
 	}

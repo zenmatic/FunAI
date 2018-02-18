@@ -11,11 +11,10 @@ class GuidingStrategy {
 
 	function DoAction(action, arg=null) {
 		local ret = Condition();
-		Debug("Condition returned ", ret);
 		if (ret == false) { return }
 
 		local strat;
-		Debug("number of strategies are ", strategies.len());
+		//Debug("number of strategies are ", strategies.len());
 		foreach (strat in strategies) {
 			//Debug("strategy: action ", action, " on ", strat.desc);
 			try {
@@ -59,16 +58,15 @@ class VerySmallMapGuide extends GuidingStrategy {
 	desc = "strategies for 64x64 maps";
 
 	constructor() {
-		local cargos = GenCargos();
-		local fruit = cargos.GRAI;
+		//local cargos = GenCargos();
+		//local fruit = cargos.GRAI;
 		strategies = [
 			MaxLoanStrategy(),
 			ExpandTowns(1,1000, 30),
+			BusesToPopularTowns(1),
 			SimpleSuppliesStrategy(5, 30, 200, 5),
-			//BusesToPopularTowns(1),
-			//SubStrategy(),
-			//TestCargoRoute(fruit),
 			AuxSuppliesStrategy(5, 30, 365, 5),
+			SubStrategy(),
 			ZeroLoanStrategy(),
 		];
 	}

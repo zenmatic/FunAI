@@ -31,8 +31,10 @@ class BuildRoad extends Task {
 		return path;
 	}
 	
-	function FindPath(a, b) {
-		local pathfinder = Road();
+	function FindPath(a, b, pathfinder=null) {
+		if (pathfinder == null) {
+			pathfinder = Road();
+		}
 		//pathfinder.cost.max_bridge_length = 10;
 		//pathfinder.cost.max_tunnel_length = 10;
 		//pathfinder.cost.max_cost = pathfinder.cost.tile * 4 * AIMap.DistanceManhattan(a, b);
@@ -119,9 +121,20 @@ class BuildTruckRoad extends BuildRoad {
 	}
 
 	function Run() {
+		// check existing roads first
+		local pathfinder = Road();
+		pathfinder.cost.no_existing_road = pathfinder.cost.max_cost;
+		if (!path) {
+			path = FindPath(location1, location2, pathfinder);
+			if (path) {
+				Debug("existing path found");
+				return;
+			}
+		}
+
 		SetConstructionSign(location1, this);
 		if (!path) path = FindPath(location1, location2);
-		//ClearSecondarySign();
+		ClearSecondarySign();
 		if (!path) throw TaskFailedException("no path");
 		BuildPath(path);
 	}

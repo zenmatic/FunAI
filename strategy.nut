@@ -223,9 +223,8 @@ class SimpleSuppliesStrategy extends Strategy {
 	}
 }
 
-// supply towns with goods like food, fruit, or goods
 class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
-	desc = "supply towns with food or goods";
+	desc = "supply towns with food or goods from existing stations";
 
 	function DoNewRoute() {
 
@@ -309,7 +308,7 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 		tiles.KeepValue(1);
 		//Debug("Count after IsRoadStationTile() is ", tiles.Count());
 		if (tiles.Count() < 1) {
-			Debug("no stations found");
+			//Debug("no stations found");
 			return null;
 		}
 
@@ -690,7 +689,8 @@ class SubStrategy extends Strategy {
 			routes.append(r);
 			tasks.append(r);
 		} else if (distance <= TRUCK_DISTANCE) {
-			local r = BuildTruckRoute(null, producer_info.location, consumer_info.location, cargo);
+			local locs = [ producer_info.location, consumer_info.location ];
+			local r = BuildTruckRoute(null, locs, cargo);
 			routes.append(r);
 			tasks.append(r);
 		} else {

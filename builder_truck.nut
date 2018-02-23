@@ -285,7 +285,7 @@ class BuildTruckDepot extends Task {
 		/* find all flat, buildable spots along the road */
 		local t, sur, s;
 		foreach (t,_ in tiles) {
-			AISign.BuildSign(t, "X");
+			//AISign.BuildSign(t, "X");
 			sur = AITileList();
 			SafeAddRectangle(sur, t, 1);
 			sur.RemoveValue(t);
@@ -329,7 +329,7 @@ class BuildTruck extends Task {
 	function Run() {
 		local z = 0;
 		local ctl = AICargo.GetCargoLabel(cargo);
-		AILog.Info("Pick truck for " + ctl);
+		Debug("Pick truck for " + ctl);
 
 		local vlist = AIEngineList(AIVehicle.VT_ROAD);
 		vlist.Valuate(AIEngine.GetCargoType);
@@ -346,7 +346,7 @@ class BuildTruck extends Task {
 		}
 
 		local eID = vlist.Begin();
-		Debug("Chose " + AIEngine.GetName(eID));
+		Debug("Chose", AIEngine.GetName(eID));
 
 		local veh = AIVehicle.BuildVehicle(depot, eID);
 		Debug("Is vehicle valid? ", AIVehicle.IsValidVehicle(veh));

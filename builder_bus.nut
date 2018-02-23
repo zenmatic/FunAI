@@ -9,11 +9,13 @@ class BuildTownRoute extends Route {
 
 	// towns is an array of town IDs
 	constructor(parentTask, towns, cargoID) {
-		Route.constructor(parentTask, null);
+		Route.constructor(parentTask, towns, cargo);
 		this.towns = towns; // trust the order of the towns
 		cargo = cargoID;
 		vgroup = AIGroup.CreateGroup(AIVehicle.VT_ROAD);
 		subtasks = [];
+		stations = {};
+		depots = {};
 	}
 	
 	function _tostring() {
@@ -166,7 +168,7 @@ class BuildBus extends Task {
 	function AllocateTruck(cargo) {
 		local z = 0;
 		local ctl = AICargo.GetCargoLabel(cargo);
-		AILog.Info("Pick truck for " + ctl);
+		Debug("Pick truck for " + ctl);
 
 		local printvals = function(msg, alist) {
 			return;
@@ -205,7 +207,7 @@ class BuildBus extends Task {
 		printvals("sorted by capacity", vlist);
 
 		local eID = vlist.Begin();
-		AILog.Info("Chose " + AIEngine.GetName(eID));
+		Debug("Chose", AIEngine.GetName(eID));
 		return eID;
 	}
 }

@@ -62,11 +62,11 @@ class VerySmallMapGuide extends GuidingStrategy {
 		//local fruit = cargos.GRAI;
 		strategies = [
 			MaxLoanStrategy(),
-			ExpandTowns(1,1000, 30),
-			BusesToPopularTowns(1),
-			SimpleSuppliesStrategy(5, 30, 200, 5),
-			AuxSuppliesStrategy(5, 30, 365, 5),
+			ExpandTowns(1, 1000, 30),
 			SubStrategy(),
+			BusesToPopularTowns(1),
+			//SimpleSuppliesStrategy(5, 30, 200, 5),
+			AuxSuppliesStrategy(5, 30, 365, 5),
 			ZeroLoanStrategy(),
 		];
 	}

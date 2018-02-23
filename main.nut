@@ -9,7 +9,7 @@ require("finance.nut");
 require("builder.nut");
 require("planner.nut");
 
-require("route.nut");
+//require("route.nut");
 require("guides.nut");
 require("strategy.nut");
 require("test.nut");
@@ -61,7 +61,7 @@ class FunAI extends AIController
 				i = i + 1;
 			}
 		}
-		AILog.Info("set company name to " + AICompany.GetName(Me));
+		Debug("set company name to " + AICompany.GetName(Me));
 
 		AICompany.SetAutoRenewStatus(true);
 		AICompany.SetAutoRenewMonths(0);

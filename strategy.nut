@@ -274,17 +274,17 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 			if (!IsCargoGood(cargo)) { continue }
 
 			local cname = AICargo.GetCargoLabel(cargo);
-			Debug("looking for aux industries with cargo ", cname);
+			//Debug("looking for aux industries with cargo ", cname);
 			local industries = AIIndustryList_CargoProducing(cargo);
-			Debug("found ", industries.Count(), " of them");
+			//Debug("found ", industries.Count(), " of them");
 			foreach (industry,_ in industries) {
 				local pID = FindStationNearIndustry(industry);
 				if (pID == null) { continue }
-				Debug("Found station near ", AIIndustry.GetName(industry));
+				//Debug("Found station near ", AIIndustry.GetName(industry));
 				local stationloc = AIStation.GetLocation(pID);
 				local townID = AITile.GetClosestTown(stationloc);
 				local dist = AITown.GetDistanceManhattanToTile(townID, stationloc);
-				Debug("stationloc=", stationloc, " townID=", townID, " dist=", dist);
+				//Debug("stationloc=", stationloc, " townID=", townID, " dist=", dist);
 				if (RouteTaken(cargo, pID, townID)) {
 					continue;
 				} else if (dist >= this.mindistance && dist <= this.maxdistance) {
@@ -298,14 +298,16 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 
 	function FindStationNearIndustry(industryID) {
 		local tiles = AITileList_IndustryProducing(industryID, 3);
-		Debug("Count is ", tiles.Count());
+		//Debug("Count is ", tiles.Count());
 		local tile;
+		/*
 		foreach (tile in tiles) {
 			AISign.BuildSign(tile, "X");
 		}
+		*/
 		tiles.Valuate(AIRoad.IsRoadStationTile);
 		tiles.KeepValue(1);
-		Debug("Count after IsRoadStationTile() is ", tiles.Count());
+		//Debug("Count after IsRoadStationTile() is ", tiles.Count());
 		if (tiles.Count() < 1) {
 			Debug("no stations found");
 			return null;
@@ -313,7 +315,7 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 
 		local stype = AIStation.STATION_TRUCK_STOP;
 		local stations = AIStationList(stype);
-		Debug("stations.Count() is ", stations.Count());
+		//Debug("stations.Count() is ", stations.Count());
 		local station;
 		foreach (station,_ in stations) {
 			local tile;
@@ -756,7 +758,7 @@ class BusesToPopularTowns extends Strategy {
 		foreach (town,station in stations) {
 			Debug("town=", town, " station=", station);
 			local stationID = AIStation.GetStationID(station);
-			local rating = GetRating(stationID);
+			local rating = GetRating(stationID, cargo);
 			if (rating < 65) {
 				Debug("Add another bus");
 				this.busroute.AddBusAtStation(station);

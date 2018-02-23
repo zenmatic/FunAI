@@ -1040,7 +1040,7 @@ class Route {
 	function AllocateTruck(cargo) {
 		local z = 0;
 		local ctl = AICargo.GetCargoLabel(cargo);
-		AILog.Info("Pick truck for " + ctl);
+		Debug("Pick truck for " + ctl);
 
 		local printvals = function(msg, alist) {
 			return;
@@ -1079,7 +1079,7 @@ class Route {
 		printvals("sorted by capacity", vlist);
 
 		local eID = vlist.Begin();
-		AILog.Info("Chose " + AIEngine.GetName(eID));
+		Debug("Chose", AIEngine.GetName(eID));
 		return eID;
 	}
 

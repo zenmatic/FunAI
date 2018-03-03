@@ -420,6 +420,8 @@ class MaxLoanStrategy extends LoanStrategy {
 	name = "max loan";
 	desc = "grab all the loan money I can get";
 
+	function Start() { Wake(); }
+
 	function Wake() {
 		local Me = this.companyID;
 		local intval = AICompany.GetLoanInterval();
@@ -430,12 +432,14 @@ class MaxLoanStrategy extends LoanStrategy {
 		//Debug("I want to get a loan of " + loan);
 		local ret = AICompany.SetMinimumLoanAmount(loan);
 		balance = AICompany.GetBankBalance(Me);
-		//Debug("ret=" + ret + " my balance is " + balance);
+		Debug("ret=" + ret + " my balance is " + balance);
 	}
 }
 
 class ZeroLoanStrategy extends LoanStrategy {
 	desc = "return all the loan money I can";
+
+	function Start() { Wake(); }
 
 	function Wake() {
 		local Me = this.companyID;

@@ -63,10 +63,22 @@ class VerySmallMapGuide extends GuidingStrategy {
 		strategies = [
 			MaxLoanStrategy(),
 			ExpandTowns(1, 1000, 30),
-			SubStrategy(),
+			//SubStrategy(),
 			BusesToPopularTowns(1),
-			//SimpleSuppliesStrategy(5, 30, 200, 5),
-			AuxSuppliesStrategy(5, 30, 365, 5),
+			SimpleSuppliesStrategy({
+				maxroutes = 5,
+				delay = 365,
+				interval = 365,
+				mindistance = 5,
+				maxdistance = 30,
+			}),
+			AuxSuppliesStrategy({
+				maxroutes = 5,
+				delay = 730,
+				interval = 100,
+				mindistance = 5,
+				maxdistance = 30,
+			}),
 			ZeroLoanStrategy(),
 		];
 	}

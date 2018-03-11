@@ -61,6 +61,61 @@ class Strategy {
 
 }
 
+class StrategyFlex extends Strategy {
+	options = {};
+	startdate = null;
+	intervaldate = null;
+
+	constructor(opts) {
+		startdate = intervaldate = AIDate.GetCurrentDate();
+		ParseOptions(opts);
+	}
+
+	function ParseOptions(opts) {
+		// defaults
+		options = {
+			maxdistance = 0,
+			mindistance = 0,
+			maxroutes = null,
+			interval = 1,
+			delay = 0,
+		};
+
+		local opt;
+		foreach (opt,_ in opts) {
+			if (opt in options) {
+				options[opt] = opts[opt];
+			} else {
+				options[opt] <- opts[opt];
+			}
+		}
+	}
+
+	function IsDelayOver() {
+		local now = AIDate.GetCurrentDate();
+		local min = startdate + options.delay;
+		if (now < min) {
+			local diff = min - now;
+			Debug(diff, " days left til delay is done");
+			return false;
+		}
+		return true;
+	}
+
+	// check and reset
+	function IsIntervalOver() {
+		local now = AIDate.GetCurrentDate();
+		local min = intervaldate + options.interval;
+		if (now < min) {
+			local diff = min - now;
+			Debug(diff, " days left til next interval");
+			return false;
+		}
+		intervaldate = now;
+		return true;
+	}
+}
+
 class BuildTrain2 extends BuildTrain {
 
 	fromtile = null;
@@ -100,31 +155,26 @@ class BuildTrain2 extends BuildTrain {
 
 }
 
-class SimpleSuppliesStrategy extends Strategy {
+class SimpleSuppliesStrategy extends StrategyFlex {
 	desc = "make supply routes which are somewhat close together";
-	maxdistance = 0;
-	mindistance = 0;
-	maxroutes = null;
-	interval = 1;
 	TRUCK_MAX = 40;
 	seenroutes = [];
-	lastroute = 0;
 
 	// interval is a new route every N days
-	constructor(min=20, max=50, interval=100, maxroutes=100) {
-		this.maxdistance = max;
-		this.mindistance = min;
-		this.interval = interval;
-		this.maxroutes = maxroutes;
+	//min=20, max=50, interval=100, maxroutes=100
+	constructor(opts) {
+		StrategyFlex.constructor(opts);
 
 		this.seenroutes = [];
 	}
 
 	function Start() {
+		if (!IsDelayOver()) { return }
 		DoNewRoute();
 	}
 
 	function Wake() {
+		if (!IsDelayOver()) { return }
 		if (NeedNewRoute()) {
 			DoNewRoute();
 		} else {
@@ -136,19 +186,11 @@ class SimpleSuppliesStrategy extends Strategy {
 	}
 
 	function NeedNewRoute() {
-		if (routes.len() >= maxroutes) {
-			Debug("reached max routes of ", maxroutes);
+		if (routes.len() >= options.maxroutes) {
+			Debug("reached max routes of ", options.maxroutes);
 			return false;
 		}
-
-		local now = AIDate.GetCurrentDate();
-		local min = lastroute + interval;
-		if (now < min) {
-			local diff = min - now;
-			//Debug(diff, " days left til next interval");
-			return false;
-		}
-		return true;
+		return IsIntervalOver();
 	}
 
 	function DoNewRoute() {
@@ -164,7 +206,6 @@ class SimpleSuppliesStrategy extends Strategy {
 			local obj = RateBasedRoute(null, locations, cargo);
 			routes.append(obj);
 			tasks.append(obj);
-			this.lastroute = AIDate.GetCurrentDate();
 		}
 	}
 
@@ -184,7 +225,7 @@ class SimpleSuppliesStrategy extends Strategy {
 					local dist = AITile.GetDistanceManhattanToTile(ploc, aloc);
 					if (RouteTaken(cargo, pID, aID, dist)) {
 						continue;
-					} else if (dist >= this.mindistance && dist <= this.maxdistance) {
+					} else if (dist >= options.mindistance && dist <= options.maxdistance) {
 						local arr = [ cargo, pID, aID, dist ];
 						routelist.append(arr);
 					}
@@ -247,7 +288,6 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 			local obj = RateBasedRoute(null, locations, cargo);
 			routes.append(obj);
 			tasks.append(obj);
-			this.lastroute = AIDate.GetCurrentDate();
 		}
 	}
 
@@ -286,7 +326,7 @@ class AuxSuppliesStrategy extends SimpleSuppliesStrategy {
 				//Debug("stationloc=", stationloc, " townID=", townID, " dist=", dist);
 				if (RouteTaken(cargo, pID, townID)) {
 					continue;
-				} else if (dist >= this.mindistance && dist <= this.maxdistance) {
+				} else if (dist >= options.mindistance && dist <= options.maxdistance) {
 					local arr = [ cargo, stationloc, townID, dist ];
 					routelist.append(arr);
 				}
@@ -508,7 +548,7 @@ class SubStrategy extends Strategy {
 	function Start() {
 		local sublist = AISubsidyList();
 		local subID = 0;
-		foreach (subID,z in sublist) {
+		foreach (subID,_ in sublist) {
 			Handle_subsidy_offer(subID);
 		}
 	}

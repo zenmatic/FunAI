@@ -62,6 +62,7 @@ class Strategy {
 }
 
 class StrategyFlex extends Strategy {
+	desc = "strategy class with options";
 	options = {};
 	startdate = null;
 	intervaldate = null;
@@ -76,7 +77,7 @@ class StrategyFlex extends Strategy {
 		options = {
 			maxdistance = 0,
 			mindistance = 0,
-			maxroutes = null,
+			maxroutes = 10,
 			interval = 1,
 			delay = 0,
 		};
@@ -116,52 +117,11 @@ class StrategyFlex extends Strategy {
 	}
 }
 
-class BuildTrain2 extends BuildTrain {
-
-	fromtile = null;
-	totile = null;
-	
-	constructor(fromtile, totile, fromDepot, toDepot, network, fromFlags, toFlags, cargo = null, cheap = false) {
-		this.fromtile = fromtile;
-		this.totile = totile;
-		BuildTrain.constructor(from, to, fromDepot, toDepot, network, fromFlags, toFlags, cargo, cheap);
-	}
-
-	function _tostring() {
-		return "BuildTrain2";
-	}
-
-	function Run() {
-		this.from = AIStation.GetStationID(this.fromtile);
-		this.to = AIStation.GetStationID(this.totile);
-		Debug("from is ", this.from, " to is ", this.to);
-
-		this.fromDepot = ClosestDepot(this.from);
-		this.toDepot = ClosestDepot(this.to);
-		Debug("fromDepot is ", this.fromDepot, " toDepot is ", this.toDepot);
-		BuildTrain.Run();
-	}
-
-	function ClosestDepot(station) {
-		local depotList = AIList();
-		foreach (depot in network.depots) {
-			depotList.AddItem(depot, 0);
-		}
-		
-		depotList.Valuate(AIMap.DistanceManhattan, AIStation.GetLocation(station));
-		depotList.KeepBottom(1);
-		return depotList.IsEmpty() ? null : depotList.Begin();
-	}
-
-}
-
 class SimpleSuppliesStrategy extends StrategyFlex {
 	desc = "make supply routes which are somewhat close together";
 	TRUCK_MAX = 40;
 	seenroutes = [];
 
-	// interval is a new route every N days
-	//min=20, max=50, interval=100, maxroutes=100
 	constructor(opts) {
 		StrategyFlex.constructor(opts);
 

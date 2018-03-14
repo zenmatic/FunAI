@@ -693,13 +693,14 @@ class Route extends Task {
 		Task.constructor(parentTask, null);
 		this.locations = locations; // an array of locations
 		this.cargo = cargo;
-		this.vtype = vtype;
-		this.vgroup = AIGroup.CreateGroup(vtype);
+		vtype = vtype;
+		vgroup = AIGroup.CreateGroup(vtype);
 
-		this.stations = [];
-		this.depots = [];
-		this.vehicles = [];
-		this.subtasks = [];
+		stations = [];
+		depots = [];
+		maxvehicles = 10;
+		vehicles = [];
+		subtasks = [];
 	}
 	
 	function _tostring() {

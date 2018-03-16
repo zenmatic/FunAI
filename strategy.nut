@@ -121,11 +121,13 @@ class SimpleSuppliesStrategy extends StrategyFlex {
 	desc = "make supply routes which are somewhat close together";
 	TRUCK_MAX = 40;
 	seenroutes = [];
+	routes = [];
 
 	constructor(opts) {
 		StrategyFlex.constructor(opts);
 
-		this.seenroutes = [];
+		routes = [];
+		seenroutes = [];
 	}
 
 	function Start() {
@@ -432,7 +434,7 @@ class MaxLoanStrategy extends LoanStrategy {
 		//Debug("I want to get a loan of " + loan);
 		local ret = AICompany.SetMinimumLoanAmount(loan);
 		balance = AICompany.GetBankBalance(Me);
-		Debug("ret=" + ret + " my balance is " + balance);
+		//Debug("ret=" + ret + " my balance is " + balance);
 	}
 }
 
@@ -760,7 +762,7 @@ class BusesToPopularTowns extends Strategy {
 		local stations = this.busroute.stations;
 		local town, station;
 		foreach (town,station in stations) {
-			Debug("town=", town, " station=", station);
+			//Debug("town=", town, " station=", station);
 			local stationID = AIStation.GetStationID(station);
 			local rating = GetRating(stationID, cargo);
 			if (rating < 65) {

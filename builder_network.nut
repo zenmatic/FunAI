@@ -712,7 +712,7 @@ class Route extends Task {
 	function Run() {
 		local producer = locations[0];
 		local consumer = locations[1];
-		local depot = FindClosestDepot(producer, this.vtype);
+		local depot = FindClosestDepot(producer);
 		if (depot == null) {
 			local d = BuildTruckDepot(this, producer);
 			d.Run();

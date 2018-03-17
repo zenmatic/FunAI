@@ -61,12 +61,12 @@ class VerySmallMapGuide extends GuidingStrategy {
 		//local cargos = GenCargos();
 		//local fruit = cargos.GRAI;
 		strategies = [
-			MaxLoanStrategy(),
-			ExpandTowns(1, 1000, 30),
-			//SubStrategy(),
+			//ExpandTowns(1, 1000, 30),
 			BusesToPopularTowns(1),
+			SubStrategy(),
+			/*  COMMENTED OUT
 			SimpleSuppliesStrategy({
-				maxroutes = 5,
+				maxroutes = 10,
 				delay = 365,
 				interval = 365,
 				mindistance = 5,
@@ -79,7 +79,7 @@ class VerySmallMapGuide extends GuidingStrategy {
 				mindistance = 5,
 				maxdistance = 30,
 			}),
-			ZeroLoanStrategy(),
+			*/
 		];
 	}
 
@@ -94,10 +94,11 @@ class VerySmallMapGuide extends GuidingStrategy {
 
 	function Wake() {
 
-		// a year later, add subsidies
-		// a year later, add simple routes
-
+		local m = MaxLoanStrategy();
+		m.Start();
 		GuidingStrategy.Wake();
+		local z = ZeroLoanStrategy();
+		z.Start();
 	}
 }
 

@@ -44,8 +44,10 @@ class BuildTownRoute extends Route {
 				if (depot == null) {
 					throw TaskFailedException("unable to build depot");
 				}
-				depots[town] <- depot;
+			} else {
+				Debug("found existing depot in ", name);
 			}
+			depots[town] <- depot;
 
 			local station = AICargo.HasCargoClass(cargo, AICargo.CC_PASSENGERS) ?
 				FindTownBusStation(town) : FindTownTruckStation(town);

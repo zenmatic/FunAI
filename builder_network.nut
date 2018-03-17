@@ -853,6 +853,12 @@ class RateBasedRoute extends Route {
 
 	desc = "Route that expands number of stations based on cargo rating";
 	depotct = 1;
+	throttles = null;
+
+	constructor(parentTask, locations, cargo, vtype=AIVehicle.VT_ROAD) {
+		Route.constructor(parentTask, locations, cargo, vtype);
+		throttles = {};
+	}
 
 	function _tostring() {
 		return "RateBasedRoute";
@@ -864,8 +870,10 @@ class RateBasedRoute extends Route {
 			local stationID = AIStation.GetStationID(station);
 			local rating = GetRating(stationID, cargo);
 			if (rating < 50) {
-				Debug("Add another vehicle to route");
-				AddVehicleAtStation(station);
+				if (ShouldAddVehicle(stationID)) {
+					Debug("Add another vehicle to route");
+					AddVehicleAtStation(station);
+				}
 			}
 
 			local vct = vehicles.len();
@@ -875,6 +883,22 @@ class RateBasedRoute extends Route {
 				local ret = ExpandStation(station);
 			}
 		}
+	}
+
+	function ShouldAddVehicle(stationID) {
+		local now = AIController.GetTick();
+		local future = now + (TICKS_PER_DAY * 15);
+		if (stationID in throttles) {
+			local next_tick = throttles[stationID];
+			if (next_tick > now) {
+				throttles[stationID] = future;
+				return true;
+			}
+		} else {
+			throttles[stationID] <- future;
+			return true;
+		}
+		return false;
 	}
 
 	function ExpandStation(stationloc) {

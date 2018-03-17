@@ -507,15 +507,15 @@ class SubStrategy extends Strategy {
 		//timer = data.timer;
 	}
 
-	function Start() {
+	function Start() { Wake(); }
+
+	function Wake() {
 		local sublist = AISubsidyList();
 		local subID = 0;
 		foreach (subID,_ in sublist) {
 			Handle_subsidy_offer(subID);
 		}
-	}
 
-	function Wake() {
 		local route;
 		foreach (route in this.routes) {
 			local station;
@@ -550,12 +550,14 @@ class SubStrategy extends Strategy {
 			//case AIEvent.ET_INVALID:
 			//case AIEvent.ET_TEST:
 
+			/*
 			case AIEvent.ET_SUBSIDY_OFFER:
 				AILog.Info("Event: Subsidy offered");
 				sube = AIEventSubsidyOffer.Convert(e);
 				subID = sube.GetSubsidyID();
 				Handle_subsidy_offer(subID);
 				break;
+			*/
 
 			case AIEvent.ET_SUBSIDY_OFFER_EXPIRED:
 				AILog.Info("Event: Subsidy offer expired");
@@ -599,7 +601,6 @@ class SubStrategy extends Strategy {
 				this.subsidies.totals.inactive++;
 				// TODO: evaluate and scale back service?
 				break;
-
 		}
 	}
 
@@ -630,20 +631,21 @@ class SubStrategy extends Strategy {
 
 		if (subID in this.subsidies) {
 			local status = this.subsidies[subID].status;
-			if (status != "open") {
-				AILog.Info(subID + " already seen.  Its status is " + status);
-				return;
-			}
+			Debug("subsidy", subID, "status is", subsidies[subID].status);
+			AILog.Info(subID + " already seen.  Its status is " + status);
+			return;
 		} else {
 			this.subsidies[subID] <- {
 				status = "open",
 			}
+			Debug("subsidy", subID, "status is", subsidies[subID].status);
 			this.subsidies.totals.total++;
 			this.subsidies.totals.active++;
 		}
+		local status = this.subsidies[subID].status;
 
 		local sdate = AISubsidy.GetExpireDate(subID);
-		Debug("subsidy expires on " + sdate);
+		Debug("subsidy expires on", sdate);
 
 		local cargo = AISubsidy.GetCargoType(subID);
 		Debug("cargo is " + cargo + " " + AICargo.GetCargoLabel(cargo));
@@ -728,11 +730,14 @@ class BusesToPopularTowns extends Strategy {
 	min = null;
 	busroute = null;
 	cargo = null;
+	throttles = null;
 
 	constructor(population_min=500) {
 		this.min = population_min;
 		local cargoIDs = GenCargos();
 		this.cargo = cargoIDs.PASS;
+
+		throttles = {};
 	}
 
 	function Start() {
@@ -765,11 +770,31 @@ class BusesToPopularTowns extends Strategy {
 			//Debug("town=", town, " station=", station);
 			local stationID = AIStation.GetStationID(station);
 			local rating = GetRating(stationID, cargo);
-			if (rating < 65) {
-				Debug("Add another bus");
-				this.busroute.AddBusAtStation(station);
+			if (rating < 60) {
+				Debug("station rating is ", rating, ". Add another bus");
+				if (CanAddBus(stationID)) {
+					this.busroute.AddBusAtStation(station);
+				} else {
+					Debug("throttling, no bus at this time");
+				}
 			}
 		}
+	}
+
+	function CanAddBus(stationID) {
+		local now = AIController.GetTick();
+		local future = now + (TICKS_PER_DAY * 15);
+		if (stationID in throttles) {
+			local next_tick = throttles[stationID];
+			if (next_tick > now) {
+				throttles[stationID] = future;
+				return true;
+			}
+		} else {
+			throttles[stationID] <- future;
+			return true;
+		}
+		return false;
 	}
 }
 

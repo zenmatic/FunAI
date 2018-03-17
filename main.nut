@@ -112,7 +112,7 @@ class FunAI extends AIController
 			}
 			Handle_events();
 			Handle_timers();
-			this.Sleep(5);
+			this.Sleep(TICKS_PER_DAY / 4);
 		}
 	}
 
@@ -158,13 +158,11 @@ class FunAI extends AIController
 
 	function Handle_timers()
 	{
-		local tasks;
-
 		local s_tick = this.GetTick();
 		if (this.timer > s_tick) {
 			return;
 		} else {
-			this.timer = s_tick + (5 * 30);
+			this.timer = s_tick + (TICKS_PER_DAY);
 		}
 
 		local guide;

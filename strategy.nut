@@ -631,14 +631,13 @@ class SubStrategy extends Strategy {
 
 		if (subID in this.subsidies) {
 			local status = this.subsidies[subID].status;
-			Debug("subsidy", subID, "status is", subsidies[subID].status);
-			AILog.Info(subID + " already seen.  Its status is " + status);
+			//Debug("subsidy", subID, "status is", subsidies[subID].status);
 			return;
 		} else {
 			this.subsidies[subID] <- {
 				status = "open",
 			}
-			Debug("subsidy", subID, "status is", subsidies[subID].status);
+			//Debug("subsidy", subID, "status is", subsidies[subID].status);
 			this.subsidies.totals.total++;
 			this.subsidies.totals.active++;
 		}

@@ -998,3 +998,30 @@ class ExpandTowns extends Strategy {
 		return false;
 	}
 }
+
+class LocalTownStations extends Strategy {
+	desc = "bus stop in every town";
+	stations = [];
+	maxstations = 0;
+	town = null;
+
+	constructor(townID, max=0) {
+		this.town = townID;
+		this.maxstations = max;
+	}
+
+	function Start() {
+		local tiles = AITileList();
+		SafeAddRectangle(tiles, AITown.GetLocation(town), 50);
+		tiles.Valuate(AITile.IsWithinTownInfluence, town);
+		tiles.KeepValue(1);
+		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+		Debug("count is ", tiles.Count());
+
+		do {
+			local tile = tiles.Begin();
+			AISign.BuildSign(tile, "X");
+			tiles.RemoveTop(6);
+		} while (tiles.Count() > 0);
+	}
+}

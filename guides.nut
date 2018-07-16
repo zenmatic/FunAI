@@ -106,41 +106,26 @@ class BigCityRoutes extends GuidingStrategy {
 	desc = "build routes in the largest city";
 	townID = null;
 
-	constructor(minpopulation=10000) {
-		strategies = [
-			//ExpandTowns(1, 1000, 30),
-			BusesToPopularTowns(1),
-			SubStrategy(),
-			/*  COMMENTED OUT
-			SimpleSuppliesStrategy({
-				maxroutes = 10,
-				delay = 365,
-				interval = 365,
-				mindistance = 5,
-				maxdistance = 30,
-			}),
-			AuxSuppliesStrategy({
-				maxroutes = 5,
-				delay = 730,
-				interval = 100,
-				mindistance = 5,
-				maxdistance = 30,
-			}),
-			*/
-		];
+	constructor(minpopulation=7000) {
 
 		townID = null;
 		local towns = AITownList();
 		towns.Valuate(AITown.GetPopulation);
 		towns.KeepAboveValue(minpopulation);
-		towns.Sort(AITown.GetPopulation, AIList.SORT_DESCENDING);
-		if (!towns.IsEmpty()) {
-			townID = AIList.Begin();
-		}
+		towns.Sort(AIList.SORT_BY_VALUE, AIList.SORT_DESCENDING);
+		if (towns.IsEmpty()) { return }
+		townID = towns.Begin();
+		local name = AITown.GetName(townID);
+		local pop = AITown.GetPopulation(townID);
+		Debug("biggest town is ", name, "with a population of ", pop);
+
+		strategies = [
+			LocalTownStations(townID),
+		];
 	}
 
 	function Condition() {
-		if (townID != null) {
+		if (this.townID != null) {
 			return true;
 		}
 		return false;

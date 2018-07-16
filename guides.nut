@@ -102,6 +102,60 @@ class VerySmallMapGuide extends GuidingStrategy {
 	}
 }
 
+class BigCityRoutes extends GuidingStrategy {
+	desc = "build routes in the largest city";
+	townID = null;
+
+	constructor(minpopulation=10000) {
+		strategies = [
+			//ExpandTowns(1, 1000, 30),
+			BusesToPopularTowns(1),
+			SubStrategy(),
+			/*  COMMENTED OUT
+			SimpleSuppliesStrategy({
+				maxroutes = 10,
+				delay = 365,
+				interval = 365,
+				mindistance = 5,
+				maxdistance = 30,
+			}),
+			AuxSuppliesStrategy({
+				maxroutes = 5,
+				delay = 730,
+				interval = 100,
+				mindistance = 5,
+				maxdistance = 30,
+			}),
+			*/
+		];
+
+		townID = null;
+		local towns = AITownList();
+		towns.Valuate(AITown.GetPopulation);
+		towns.KeepAboveValue(minpopulation);
+		towns.Sort(AITown.GetPopulation, AIList.SORT_DESCENDING);
+		if (!towns.IsEmpty()) {
+			townID = AIList.Begin();
+		}
+	}
+
+	function Condition() {
+		if (townID != null) {
+			return true;
+		}
+		return false;
+	}
+
+	function Wake() {
+
+		local m = MaxLoanStrategy();
+		m.Start();
+		GuidingStrategy.Wake();
+		local z = ZeroLoanStrategy();
+		z.Start();
+	}
+}
+
 // other ideas:
 // very urban maps
 // lots of water

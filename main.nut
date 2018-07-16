@@ -83,6 +83,7 @@ class FunAI extends AIController
 
 		this.guides = [
 			VerySmallMapGuide(),
+			BigCityRoutes(),
 		];
 
 		local guide;

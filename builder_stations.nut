@@ -375,6 +375,7 @@ class BuildTownBusStation extends Task {
 			area.KeepValue(0);
 			area.Valuate(AIRoad.GetNeighbourRoadCount);
 			area.KeepBelowValue(3);	// 1 and 2 are OK
+			area.RemoveValue(0);
 			
 			if (area.Count()) {
 				for (local t = area.Begin(); !area.IsEnd(); t = area.Next()) {

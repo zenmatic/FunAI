@@ -1012,16 +1012,17 @@ class LocalTownStations extends Strategy {
 
 	function Start() {
 		local tiles = AITileList();
-		SafeAddRectangle(tiles, AITown.GetLocation(town), 50);
+		local town_loc = AITown.GetLocation(town);
+		SafeAddRectangle(tiles, town_loc, 50);
 		tiles.Valuate(AITile.IsWithinTownInfluence, town);
 		tiles.KeepValue(1);
 		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
 		Debug("count is ", tiles.Count());
 
-		do {
-			local tile = tiles.Begin();
-			AISign.BuildSign(tile, "X");
-			tiles.RemoveTop(6);
-		} while (tiles.Count() > 0);
+		tasks.append(BuildTownBusStation(null, town));
+		local tile;
+		foreach (tile,_ in tiles) {
+			tasks.append(BuildTruckStationUnlessNearby(null, tile, AIRoad.ROADVEHTYPE_BUS));
+		}
 	}
 }

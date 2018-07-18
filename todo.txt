@@ -1,5 +1,10 @@
 TEST:
 TODO:
+- duplicate classes
+  BuildStopInTown
+  BuildBusStationInTown extends Task {
+  BuildTownBusStation extends Task {
+
 - mail/pax aspect of subsidies
   - is industry in town or mail/pax?
     if yes, then make transfer station

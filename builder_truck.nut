@@ -55,13 +55,13 @@ class BuildStopInTown extends Task {
 
 		/* find buildable spots along the road */
 		local t, sur, s, z, ret;
-		foreach (t,z in tiles) {
+		foreach (t,_ in tiles) {
 			sur = AITileList();
 			SafeAddRectangle(sur, t, 1);
 
 			sur.Valuate(AIRoad.IsRoadTile);
 			sur.KeepValue(1);
-			foreach (s,z in sur) {
+			foreach (s,_ in sur) {
 				ret = AIRoad.BuildDriveThroughRoadStation(t,s,stype,stat);
 				if (ret) {
 					// pass this to the parent?
@@ -326,9 +326,10 @@ class BuildTruckDepot extends Task {
 		roadtiles.Valuate(AIRoad.IsRoadTile);
 		roadtiles.KeepValue(1);
 		if (roadtiles.Count() > 0) {
-			Debug("road tiles found");
+			Debug(roadtiles.Count(), "road tiles found");
 			tiles = roadtiles;
 		}
+		Debug("tile count", tiles.Count());
 
 		tiles.Valuate(AITile.GetDistanceManhattanToTile, centertile);
 		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
@@ -348,6 +349,8 @@ class BuildTruckDepot extends Task {
 
 			foreach (s,_ in sur) {
 				if (AIRoad.BuildRoadDepot(s, t)) {
+					AISign.BuildSign(s, "B");
+					AISign.BuildSign(t, "F");
 					AIRoad.BuildRoad(s, t);
 					this.depot = s;
 					return;
@@ -360,16 +363,14 @@ class BuildTruckDepot extends Task {
 
 class BuildTruck extends Task {
 
-	producer = null;
-	consumer = null;
+	stops = [];
 	depot = null;
 	cargo = null;
 
-	constructor(parentTask, d, p, c, cargoID) {
+	constructor(parentTask, d, stops, cargoID) {
 		Task.constructor(parentTask, null);
 		depot = d;
-		producer = p;
-		consumer = c;
+		this.stops = stops;
 		cargo = cargoID;
 	}
 	
@@ -407,8 +408,11 @@ class BuildTruck extends Task {
 		}
 
 		local flags = AIOrder.OF_NONE;
-		AIOrder.AppendOrder(veh, producer, flags);
-		AIOrder.AppendOrder(veh, consumer, flags);
+		local stop;
+		foreach (_,stop in this.stops) {
+			Debug("stop is", stop);
+			AIOrder.AppendOrder(veh, stop, flags);
+		}
 		AIOrder.AppendOrder(veh, depot, flags);
 		AIVehicle.StartStopVehicle(veh);
 	}

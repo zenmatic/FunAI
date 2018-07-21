@@ -1002,12 +1002,17 @@ class ExpandTowns extends Strategy {
 class LocalTownStations extends Strategy {
 	desc = "bus stop in every town";
 	stations = [];
+	depots = [];
 	maxstations = 0;
 	town = null;
+	buildphase = 0;
 
 	constructor(townID, max=0) {
 		this.town = townID;
 		this.maxstations = max;
+		this.buildphase = 1;
+		this.stations = [];
+		this.depots = [];
 	}
 
 	function Start() {
@@ -1019,10 +1024,61 @@ class LocalTownStations extends Strategy {
 		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
 		Debug("count is ", tiles.Count());
 
+		tasks.append(BuildTruckDepot(null, town_loc));
 		tasks.append(BuildTownBusStation(null, town));
+
 		local tile;
 		foreach (tile,_ in tiles) {
 			tasks.append(BuildTruckStationUnlessNearby(null, tile, AIRoad.ROADVEHTYPE_BUS));
 		}
+	}
+
+	function Wake() {
+		if (buildphase == 1) {
+			if (tasks.len() > 0) {
+				return;
+			}
+			buildphase++;
+			BuildRoute();
+		}
+	}
+
+	function GetTownTiles(town, range=50) {
+		local tiles = AITileList();
+		if (AITown.IsValidTown(town)) {
+			local town_loc = AITown.GetLocation(town);
+			SafeAddRectangle(tiles, town_loc, range);
+			tiles.Valuate(AITile.IsWithinTownInfluence, town);
+			tiles.KeepValue(1);
+		}
+		return tiles;
+	}
+
+	function GetRoadStations(tiles) {
+		tiles.Valuate(AIRoad.IsRoadStationTile);
+		tiles.KeepValue(1);
+		return ListToArray(tiles);
+	}
+
+	function GetRoadDepots(tiles) {
+		tiles.Valuate(AIRoad.IsRoadDepotTile);
+		tiles.KeepValue(1);
+		return ListToArray(tiles);
+	}
+
+	function BuildRoute() {
+
+		local tiles = GetTownTiles(this.town);
+		stations = GetRoadStations(tiles);
+		local tiles2 = GetTownTiles(this.town);
+		depots = GetRoadDepots(tiles2);
+
+		if (depots.len() < 1) {
+			throw TaskFailedException("can't create routes because no depots found");
+		}
+		local depot = depots[0];
+		//local depotID = AIStation.GetStationID(depot);
+		local cargoIDs = GenCargos();
+		tasks.append(BuildTruck(null, depot, stations, cargoIDs.PASS));
 	}
 }

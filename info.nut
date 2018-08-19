@@ -6,7 +6,7 @@ class FunAI extends AIInfo {
 	function GetDate()        { return "2017-04-03"; }
 	function CreateInstance() { return "FunAI"; }
 	function GetShortName()   { return "FUNI"; }
-	function GetAPIVersion()  { return "1.7"; }
+	function GetAPIVersion()  { return "1.8"; }
 
 	function GetSettings() {
 	    AddSetting({name = "CargoLines", description = "Number of single track cargo lines to start with", min_value = 0, max_value = 20, easy_value = 5, medium_value = 10, hard_value = 20, custom_value = 10, flags = AICONFIG_INGAME});

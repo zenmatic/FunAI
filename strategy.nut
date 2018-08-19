@@ -542,7 +542,7 @@ class SubStrategy extends Strategy {
 			case AIEvent.ET_VEHICLE_LOST:
 			case AIEvent.ET_VEHICLE_WAITING_IN_DEPOT:
 			case AIEvent.ET_VEHICLE_UNPROFITABLE:
-				foreach (i,route in this.routes) {
+				foreach (route,_ in this.routes) {
 					route.HandleEvent(e);
 				}
 				break;
@@ -1006,6 +1006,10 @@ class LocalTownStations extends Strategy {
 	maxstations = 0;
 	town = null;
 	buildphase = 0;
+	buscount = 0;
+	busmax = 10;
+	interval = 10;
+	lastroutetime = 0;
 
 	constructor(townID, max=0) {
 		this.town = townID;
@@ -1013,6 +1017,10 @@ class LocalTownStations extends Strategy {
 		this.buildphase = 1;
 		this.stations = [];
 		this.depots = [];
+		this.buscount = 0;
+		this.busmax = 10;
+		this.interval = 10;
+		this.lastroutetime = 0;
 	}
 
 	function Start() {
@@ -1021,15 +1029,32 @@ class LocalTownStations extends Strategy {
 		SafeAddRectangle(tiles, town_loc, 50);
 		tiles.Valuate(AITile.IsWithinTownInfluence, town);
 		tiles.KeepValue(1);
+		tiles.Valuate(AITile.IsWaterTile);
+		tiles.RemoveValue(1);
+		tiles.Valuate(AITile.GetSlope);
+		tiles.KeepValue(AITile.SLOPE_FLAT);
+		tiles.Valuate(AIRoad.IsRoadTile);
+		tiles.KeepValue(1);
+
+		tiles.Valuate(AITile.GetDistanceSquareToTile, town_loc);
 		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
 		Debug("count is ", tiles.Count());
 
 		tasks.append(BuildTruckDepot(null, town_loc));
 		tasks.append(BuildTownBusStation(null, town));
 
-		local tile;
-		foreach (tile,_ in tiles) {
-			tasks.append(BuildTruckStationUnlessNearby(null, tile, AIRoad.ROADVEHTYPE_BUS));
+		local area = AITileList();
+		SafeAddRectangle(area, town_loc, 4);
+		tiles.RemoveList(area);
+		Debug("count is ", tiles.Count());
+
+		while (tiles.Count() > 0) {
+			local tile = tiles.Begin();
+			local area2 = AITileList();
+			SafeAddRectangle(area2, tile, 5);
+			tiles.RemoveList(area2);
+			Debug("while tiles.Count is", tiles.Count());
+			tasks.append(BuildTruckStationInTown(null, tile, AIRoad.ROADVEHTYPE_BUS));
 		}
 	}
 
@@ -1039,7 +1064,16 @@ class LocalTownStations extends Strategy {
 				return;
 			}
 			buildphase++;
+		}
+
+		if (buscount < busmax) {
+			local s_tick = AIController.GetTick();
+			if (s_tick > (lastroutetime + (1000 * this.interval))) {
+				return;
+			}
 			BuildRoute();
+			lastroutetime = s_tick;
+			buscount++;
 		}
 	}
 

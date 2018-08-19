@@ -239,7 +239,6 @@ function PrintError(ret=false) {
 	}
 }
 
-
 function Sign(x) {
 	if (x < 0) return -1;
 	if (x > 0) return 1;

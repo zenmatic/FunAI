@@ -244,15 +244,22 @@ class BuildTruckStation extends Task {
 	}
 }
 
-// unless nearby another station (try to space them out)
-class BuildTruckStationUnlessNearby extends BuildTruckStation {
+class BuildTruckStationInTown extends BuildTruckStation {
 	function _tostring() {
 		return "BuildTruckStationUnlessNearby";
 	}
 
 	function Run() {
 		local tiles = AITileList();
-		SafeAddRectangle(tiles, location, 5);
+		SafeAddRectangle(tiles, location, 4);
+		tiles.Valuate(AITile.IsWaterTile);
+		tiles.RemoveValue(1);
+		tiles.Valuate(AITile.GetSlope);
+		tiles.KeepValue(AITile.SLOPE_FLAT);
+		tiles.Valuate(AIRoad.IsRoadTile);
+		tiles.KeepValue(1);
+		Debug("1 tile count is", tiles.Count());
+
 		local tile;
 		foreach (tile,_ in tiles) {
 			if (AIRoad.IsRoadStationTile(tile) || AIRoad.IsDriveThroughRoadStationTile(tile)) {
@@ -261,27 +268,16 @@ class BuildTruckStationUnlessNearby extends BuildTruckStation {
 			}
 		}
 
-		Debug("tile count is ", tiles.Count());
-		tiles.Valuate(AITile.GetSlope);
-		tiles.KeepValue(AITile.SLOPE_FLAT);
-		Debug("tile count is ", tiles.Count());
-		tiles.Valuate(AIRoad.IsRoadTile);
-		tiles.KeepValue(1);
-		Debug("tile count is ", tiles.Count());
-
 		local stationtype = AIStation.STATION_NEW;
-		local stationtype = AIStation.STATION_JOIN_ADJACENT;
 		local front;
 		foreach (tile,_ in tiles) {
-			Debug("1");
 			//if (!AITile.IsBuildableRectangle(tile, 1, 1)) { continue }
-			Debug("2");
 			local area = AITileList();
 			SafeAddRectangle(area, tile, 1);
-			area.RemoveValue(tile);
+			//area.RemoveValue(tile);
 			area.Valuate(AIRoad.IsRoadTile);
 			area.KeepValue(1);
-			Debug("area.Count() is ", area.Count());
+			Debug("area count is", area.Count());
 
 			foreach (front,_ in area) {
 				if (AIRoad.BuildDriveThroughRoadStation(tile, front, this.ttype, stationtype)) {

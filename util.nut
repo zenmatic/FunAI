@@ -116,6 +116,7 @@ function FindClosestDepot(location, ttype=AITile.TRANSPORT_ROAD, distance=20) {
 	if (dlist.Count() > 0) {
 		return dlist.Begin();
 	}
+	Debug("FindClosestDepot() none found");
 	return null;
 }
 
@@ -204,7 +205,16 @@ function GenCargos()
 function Debug(...) {
 	local s = "";
 	for(local i = 0; i< vargc; i++) {
-		s = s + " " + vargv[i];
+		if (typeof(vargv[i]) == "array") {
+			local item;
+			s = s + " array:[";
+			foreach (item in vargv[i]) {
+				s = s + item + ",";
+			}
+			s = s + "]";
+		} else {
+			s = s + " " + vargv[i];
+		}
 	}
 	
 	AILog.Info(GetDate() + ":" + s);

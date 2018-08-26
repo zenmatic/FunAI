@@ -704,7 +704,10 @@ class Route extends Task {
 	}
 	
 	function _tostring() {
-		return "Route";
+		local stationstr = "";
+		local station;
+		foreach (station in stations) { stationstr += station }
+		return "Route for stations=" + stationstr;
 	}
 
 	// most basic route assumes a 1-to-1 mapping, a producer (and depot)
@@ -846,6 +849,39 @@ class Route extends Task {
 			loc1 = loc2;
 		}
 		return newarr;
+	}
+}
+
+class RouteNoBuild extends Route {
+
+	constructor(parentTask, locations, cargo, vtype=AIVehicle.VT_ROAD) {
+		Route.constructor(parentTask, locations, cargo, vtype);
+		stations = locations;
+	}
+
+	function _tostring() {
+		return "RouteNoBuild";
+	}
+
+	function Run() {
+		Debug("locations=", locations);
+		local loc1 = locations[0];
+		local depot = FindClosestDepot(locations[0]);
+		if (depot == null) {
+			throw TaskFailedException("no depot found");
+		}
+		depots.append(depot);
+
+		local veh = AddVehicle(depot);
+		Debug("vehicle count is", vehicles.len());
+		if (vehicles.len() == 1) {
+			// only give orders to the first vehicle
+			// the rest just share those orders
+			AddOrders(veh);
+		} else {
+			AIOrder.ShareOrders(veh, vehicles[0]);
+		}
+		AIVehicle.StartStopVehicle(veh);
 	}
 }
 

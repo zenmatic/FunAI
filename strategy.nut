@@ -999,6 +999,11 @@ class ExpandTowns extends Strategy {
 	}
 }
 
+/*
+big city strategy:
+- spread out stations somewhat evenly in city
+- make overlapping routes of 4 stations
+*/
 class LocalTownStations extends Strategy {
 	desc = "bus stop in every town";
 	stations = [];
@@ -1021,44 +1026,18 @@ class LocalTownStations extends Strategy {
 		this.busmax = 10;
 		this.interval = 10;
 		this.lastroutetime = 0;
+		this.tasks = [];
 	}
 
 	function Start() {
-		local tiles = AITileList();
-		local town_loc = AITown.GetLocation(town);
-		SafeAddRectangle(tiles, town_loc, 50);
-		tiles.Valuate(AITile.IsWithinTownInfluence, town);
-		tiles.KeepValue(1);
-		tiles.Valuate(AITile.IsWaterTile);
-		tiles.RemoveValue(1);
-		tiles.Valuate(AITile.GetSlope);
-		tiles.KeepValue(AITile.SLOPE_FLAT);
-		tiles.Valuate(AIRoad.IsRoadTile);
-		tiles.KeepValue(1);
-
-		tiles.Valuate(AITile.GetDistanceSquareToTile, town_loc);
-		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
-		Debug("count is ", tiles.Count());
-
-		tasks.append(BuildTruckDepot(null, town_loc));
-		tasks.append(BuildTownBusStation(null, town));
-
-		local area = AITileList();
-		SafeAddRectangle(area, town_loc, 4);
-		tiles.RemoveList(area);
-		Debug("count is ", tiles.Count());
-
-		while (tiles.Count() > 0) {
-			local tile = tiles.Begin();
-			local area2 = AITileList();
-			SafeAddRectangle(area2, tile, 5);
-			tiles.RemoveList(area2);
-			Debug("while tiles.Count is", tiles.Count());
-			tasks.append(BuildTruckStationInTown(null, tile, AIRoad.ROADVEHTYPE_BUS));
-		}
+		tasks = [
+			BuildStationsInCity(null, town),
+			BuildRoutesInCity(null, town),
+		];
 	}
 
 	function Wake() {
+		return;
 		if (buildphase == 1) {
 			if (tasks.len() > 0) {
 				return;
@@ -1116,3 +1095,4 @@ class LocalTownStations extends Strategy {
 		tasks.append(BuildTruck(null, depot, stations, cargoIDs.PASS));
 	}
 }
+

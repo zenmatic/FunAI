@@ -297,10 +297,10 @@ class BuildTruckDepot extends Task {
 	depot = null;
 	RADIUS = 15;
 
-	constructor(parentTask, location) {
+	constructor(parentTask, location, radius=15) {
 		Task.constructor(parentTask, null);
 		this.location = location;
-		Debug("location=", location);
+		this.RADIUS = radius;
 	}
 	
 	function _tostring() {
@@ -345,8 +345,8 @@ class BuildTruckDepot extends Task {
 
 			foreach (s,_ in sur) {
 				if (AIRoad.BuildRoadDepot(s, t)) {
-					AISign.BuildSign(s, "B");
-					AISign.BuildSign(t, "F");
+					//AISign.BuildSign(s, "B");
+					//AISign.BuildSign(t, "F");
 					AIRoad.BuildRoad(s, t);
 					this.depot = s;
 					return;

@@ -519,3 +519,113 @@ function FindTownTruckStation(town, stype=AIStation.STATION_TRUCK_STOP) {
 function FindTownBusStation(town) {
 	return FindTownTruckStation(town, AIStation.STATION_BUS_STOP);
 }
+
+
+class BuildStationsInCity extends Task {
+	town = null;
+
+	constructor(parentTask, town) {
+		Task.constructor(parentTask);
+		this.town = town;
+		subtasks = [];
+	}
+
+	function _tostring() {
+		return "BuildStationsInCity";
+	}
+
+	function Run() {
+		local tiles = AITileList();
+		local town_loc = AITown.GetLocation(town);
+		SafeAddRectangle(tiles, town_loc, 50);
+		tiles.Valuate(AITile.IsWithinTownInfluence, town);
+		tiles.KeepValue(1);
+		tiles.Valuate(AITile.IsWaterTile);
+		tiles.RemoveValue(1);
+		tiles.Valuate(AITile.GetSlope);
+		tiles.KeepValue(AITile.SLOPE_FLAT);
+		tiles.Valuate(AIRoad.IsRoadTile);
+		tiles.KeepValue(1);
+
+		tiles.Valuate(AITile.GetDistanceSquareToTile, town_loc);
+		tiles.Sort(AIList.SORT_BY_VALUE, AIList.SORT_ASCENDING);
+		Debug("count is ", tiles.Count());
+
+		subtasks.append(BuildTruckDepot(this, town_loc));
+		subtasks.append(BuildTownBusStation(this, town));
+
+		local area = AITileList();
+		SafeAddRectangle(area, town_loc, 4);
+		tiles.RemoveList(area);
+		Debug("count is ", tiles.Count());
+
+		local radius = 5;
+		while (tiles.Count() > 0) {
+			local tile = tiles.Begin();
+			local area2 = AITileList();
+			SafeAddRectangle(area2, tile, radius);
+			tiles.RemoveList(area2);
+			subtasks.append(BuildTruckDepot(this, tile, radius * 2));
+			subtasks.append(BuildTruckStationInTown(this, tile, AIRoad.ROADVEHTYPE_BUS));
+		}
+
+		RunSubtasks();
+	}
+}
+
+class BuildRoutesInCity extends Task {
+	town = null;
+
+	constructor(parentTask, town) {
+		Task.constructor(parentTask);
+		this.town = town;
+		subtasks = [];
+	}
+
+	function _tostring() {
+		return "BuildRoutesInCity";
+	}
+
+	function Run() {
+		local cargoIDs = GenCargos();
+
+		local stations = AIStationList(AIStation.STATION_BUS_STOP);
+		stations.Valuate(AIStation.IsWithinTownInfluence, this.town);
+		stations.KeepValue(1);
+
+		while (stations.Count() > 0) {
+			local i = 0;
+			local max = 4;
+			local stops = [];
+			local station;
+			foreach (station,_ in stations) {
+				Debug(" station=", station);
+				stops.append(station);
+				i++;
+				if (i >= max) {
+					break;
+				}
+			}
+			stations.RemoveTop(max - 1);
+			if (stations.Count() <= 2) {
+				foreach (station,_ in stations) {
+					stops.append(station);
+				}
+				stations.Clear();
+			}
+			subtasks.append(RouteNoBuild(this, convert2locations(stops), cargoIDs.PASS));
+		}
+
+		RunSubtasks();
+	}
+
+	function convert2locations(stations) {
+		local locs = [];
+		local station;
+		foreach (_, station in stations) {
+			local loc = AIStation.GetLocation(station);
+			locs.append(loc);
+		}
+		return locs;
+	}
+}

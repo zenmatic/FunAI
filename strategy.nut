@@ -6,9 +6,11 @@ class Strategy {
 	tasks = [];
 
 	function Start() {
+		Debug("Starting:", desc);
 	}
 
 	function Stop() {
+		Debug("Stopping:", desc);
 	}
 
 	function Uninit() {

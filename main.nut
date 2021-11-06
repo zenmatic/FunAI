@@ -32,7 +32,7 @@ enum SignalMode {
 	NONE, FORWARD, BACKWARD
 }
 
-import("pathfinder.road", "RoadPathFinder", 3);
+import("pathfinder.road", "RoadPathFinder", 4);
 
 class FunAI extends AIController
 {
@@ -146,11 +146,11 @@ class FunAI extends AIController
 			q3 = AIDate.GetDate(thisyear, 9, 30),
 			q4 = AIDate.GetDate(thisyear, 12, 31),
 		};
-		local q,z;
-		foreach (q,z in quarters) {
+		local q;
+		foreach (q,_ in quarters) {
 			if (quarters[q] == date) {
-				//Debug("New Quarter");
-				//CompanyStats();
+				Debug("New Quarter");
+				CompanyStats();
 				//RouteStats();
 				//SubsidyStats();
 			}

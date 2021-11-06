@@ -1,4 +1,4 @@
-import("pathfinder.road", "Road", 3);
+import("pathfinder.road", "Road", 4);
 
 class BuildRoad extends Task {
 
@@ -38,8 +38,8 @@ class BuildRoad extends Task {
 		//pathfinder.cost.max_bridge_length = 10;
 		//pathfinder.cost.max_tunnel_length = 10;
 		//pathfinder.cost.max_cost = pathfinder.cost.tile * 4 * AIMap.DistanceManhattan(a, b);
-		Debug("max_cost=", pathfinder.cost.max_cost);
-		Debug("path from ", a, " to ", b);
+		Debug("max_cost", "=", pathfinder.cost.max_cost);
+		Debug("path from", a, "to", b);
 		
 		// Pathfinding needs money since it attempts to build in test mode.
 		// We can't get the price of a tunnel, but we can get it for a bridge

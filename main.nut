@@ -92,7 +92,7 @@ class FunAI extends AIController
 			try {
 				guide.Start();
 			} catch (e) {
-				Error("exception thrown");
+				Error("exception thrown:", e);
 			}
 		}
 
@@ -108,23 +108,22 @@ class FunAI extends AIController
 			date = AIDate.GetCurrentDate();
 			cur_day = AIDate.GetDayOfMonth(date);
 			if (cur_day != last_day) {
-				EndOfQuarter();
 				last_day = cur_day;
+				EndOfQuarter();
+				Handle_timers();
 			}
 			Handle_events();
-			Handle_timers();
-			this.Sleep(TICKS_PER_DAY / 4);
+			Sleep(TICKS_PER_DAY / 4);
 		}
 	}
 
 	function Handle_events()
 	{
-		//Debug("Handle_events() called");
+		local e, guide;
 		while (AIEventController.IsEventWaiting()) {
-			local e = AIEventController.GetNextEvent();
-			Debug("this event occurred: " + e.GetEventType());
-			local guide;
-			foreach (guide in this.guides) {
+			e = AIEventController.GetNextEvent();
+			Debug("this event occurred:", e.GetEventType(), ":", GetDescriptionForEvent(e));
+			foreach (guide in guides) {
 				guide.Event(e);
 			}
 		}
@@ -150,25 +149,28 @@ class FunAI extends AIController
 		foreach (q,_ in quarters) {
 			if (quarters[q] == date) {
 				Debug("New Quarter");
-				CompanyStats();
+				//CompanyStats();
 				//RouteStats();
 				//SubsidyStats();
+				local guide;
+				foreach (guide in guides) {
+					guide.Quarterly();
+				}
 			}
 		}
 	}
 
 	function Handle_timers()
 	{
-		local s_tick = this.GetTick();
-		if (this.timer > s_tick) {
+		local s_tick = GetTick();
+		if (timer > s_tick) {
 			return;
 		} else {
-			this.timer = s_tick + (TICKS_PER_DAY);
+			timer = s_tick + (TICKS_PER_DAY);
 		}
 
 		local guide;
-		foreach (guide in this.guides) {
-			//Debug("guides " + guide.desc + ".Wake()");
+		foreach (guide in guides) {
 			guide.Wake();
 		}
 	}

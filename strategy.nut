@@ -32,6 +32,9 @@ class Strategy {
 	function Wake() {
 	}
 
+	function Quarterly() {
+	}
+
 	function RunTasks() {
 		local task;
 		while (tasks.len() > 0) {
@@ -44,14 +47,16 @@ class Strategy {
 			} catch (e) {
 				if (typeof(e) == "instance") {
 					if (e instanceof TaskRetryException) {
+						Debug("Must retry, sleep for", e.sleep);
 						AIController.Sleep(e.sleep);
 						Debug("Retrying...");
 					} else if (e instanceof TaskFailedException) {
-						Warning(task + " failed: " + e);
+						Warning(task, "failed:", e);
 						tasks.remove(0);
 						task.Failed();
 					} else if (e instanceof NeedMoneyException) {
-						Debug(task + " needs £" + e.amount);
+						Debug(task, "needs", e.amount);
+						return;
 					}
 				} else {
 					Error("Unexpected error");
@@ -60,7 +65,6 @@ class Strategy {
 			}
 		}
 	}
-
 }
 
 class StrategyFlex extends Strategy {
@@ -509,14 +513,21 @@ class SubStrategy extends Strategy {
 		//timer = data.timer;
 	}
 
-	function Start() { Wake(); }
-
-	function Wake() {
+	function check_subsidies() {
 		local sublist = AISubsidyList();
 		local subID = 0;
 		foreach (subID,_ in sublist) {
 			Handle_subsidy_offer(subID);
 		}
+	}
+
+	function Start() {
+		check_subsidies();
+	}
+
+	function Quarterly() {
+
+		check_subsidies();
 
 		local route;
 		foreach (route in this.routes) {

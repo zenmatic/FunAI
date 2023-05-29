@@ -14,6 +14,9 @@ class TaskFailedException {
 }
 
 class TaskRouteTooManyVehicles extends TaskFailedException {
+	function _tostring() {
+		return "Task failed: too many vehicles: " + msg;
+	}
 }
 
 class TaskRetryException {
@@ -55,13 +58,11 @@ class Task {
 	parentTask = null;
 	subtasks = null;
 	currentTask = null;
-	completed = null;
+	completed = [];
 	
 	constructor(parentTask=null, subtasks=null) {
 		this.parentTask = parentTask;
 		this.subtasks = subtasks;
-		this.currentTask = null;
-		this.completed = [];
 	}
 	
 	function Run() {

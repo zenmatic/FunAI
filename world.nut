@@ -274,20 +274,17 @@ class Network {
 	trainLength = null;
 	minDistance = null;
 	maxDistance = null;
-	stations = null;
-	depots = null;
-	trains = null;
+	stations = [];
+	depots = [];
+	trains = [];
 	
 	constructor(railType, trainLength, minDistance, maxDistance) {
 		this.railType = railType;
 		this.trainLength = trainLength;
 		this.minDistance = minDistance;
 		this.maxDistance = maxDistance;
-		this.stations = [];
-		this.depots = [];
-		this.trains = [];
 	}
-	
+
 }
 
 class MixedNetwork extends Network {

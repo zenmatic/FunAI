@@ -1,3 +1,76 @@
+function GetDescriptionForEvent(e) {
+	switch (e.GetEventType()) {
+		case AIEvent.ET_INVALID:
+			return "ET_INVALID";
+		case AIEvent.ET_TEST:
+			return "ET_TEST";
+		case AIEvent.ET_SUBSIDY_OFFER:
+			return "ET_SUBSIDY_OFFER";
+		case AIEvent.ET_SUBSIDY_OFFER_EXPIRED:
+			return "ET_SUBSIDY_OFFER_EXPIRED";
+		case AIEvent.ET_SUBSIDY_AWARDED:
+			return "ET_SUBSIDY_AWARDED";
+		case AIEvent.ET_SUBSIDY_EXPIRED:
+			return "ET_SUBSIDY_EXPIRED";
+		case AIEvent.ET_ENGINE_PREVIEW:
+			return "ET_ENGINE_PREVIEW";
+		case AIEvent.ET_COMPANY_NEW:
+			return "ET_COMPANY_NEW";
+		case AIEvent.ET_COMPANY_IN_TROUBLE:
+			return "ET_COMPANY_IN_TROUBLE";
+		case AIEvent.ET_COMPANY_ASK_MERGER:
+			return "ET_COMPANY_ASK_MERGER";
+		case AIEvent.ET_COMPANY_MERGER:
+			return "ET_COMPANY_MERGER";
+		case AIEvent.ET_COMPANY_BANKRUPT:
+			return "ET_COMPANY_BANKRUPT";
+		case AIEvent.ET_VEHICLE_CRASHED:
+			return "ET_VEHICLE_CRASHED";
+		case AIEvent.ET_VEHICLE_LOST:
+			return "ET_VEHICLE_LOST";
+		case AIEvent.ET_VEHICLE_WAITING_IN_DEPOT:
+			return "ET_VEHICLE_WAITING_IN_DEPOT";
+		case AIEvent.ET_VEHICLE_UNPROFITABLE:
+			return "ET_VEHICLE_UNPROFITABLE";
+		case AIEvent.ET_INDUSTRY_OPEN:
+			return "ET_INDUSTRY_OPEN";
+		case AIEvent.ET_INDUSTRY_CLOSE:
+			return "ET_INDUSTRY_CLOSE";
+		case AIEvent.ET_ENGINE_AVAILABLE:
+			return "ET_ENGINE_AVAILABLE";
+		case AIEvent.ET_STATION_FIRST_VEHICLE:
+			return "ET_STATION_FIRST_VEHICLE";
+		case AIEvent.ET_DISASTER_ZEPPELINER_CRASHED:
+			return "ET_DISASTER_ZEPPELINER_CRASHED";
+		case AIEvent.ET_DISASTER_ZEPPELINER_CLEARED:
+			return "ET_DISASTER_ZEPPELINER_CLEARED";
+		case AIEvent.ET_TOWN_FOUNDED:
+			return "ET_TOWN_FOUNDED";
+		case AIEvent.ET_AIRCRAFT_DEST_TOO_FAR:
+			return "ET_AIRCRAFT_DEST_TOO_FAR";
+		case AIEvent.ET_ADMIN_PORT:
+			return "ET_ADMIN_PORT";
+		case AIEvent.ET_WINDOW_WIDGET_CLICK:
+			return "ET_WINDOW_WIDGET_CLICK";
+		case AIEvent.ET_GOAL_QUESTION_ANSWER:
+			return "ET_GOAL_QUESTION_ANSWER";
+		case AIEvent.ET_EXCLUSIVE_TRANSPORT_RIGHTS:
+			return "ET_EXCLUSIVE_TRANSPORT_RIGHTS";
+		case AIEvent.ET_ROAD_RECONSTRUCTION:
+			return "ET_ROAD_RECONSTRUCTION";
+		case AIEvent.ET_VEHICLE_AUTOREPLACED:
+			return "ET_VEHICLE_AUTOREPLACED";
+		case AIEvent.ET_STORYPAGE_BUTTON_CLICK:
+			return "ET_STORYPAGE_BUTTON_CLICK";
+		case AIEvent.ET_STORYPAGE_TILE_SELECT:
+			return "ET_STORYPAGE_TILE_SELECT";
+		case AIEvent.ET_STORYPAGE_VEHICLE_SELECT:
+			return "ET_STORYPAGE_VEHICLE_SELECT";
+		default:
+			return "unknown event";
+	}
+}
+
 function GetRating(stationID, cargo) {
 	local rating = 100;
 	local sname = AIStation.GetName(stationID);

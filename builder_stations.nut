@@ -263,7 +263,7 @@ class BuildBusStations extends Task {
 
 	stationTile = null;
 	town = null;
-	stations = null;
+	stations = [];
 		
 	constructor(parentTask, stationTile, town) {
 		Task.constructor(parentTask);

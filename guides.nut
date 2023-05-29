@@ -1,12 +1,12 @@
 
 class GuidingStrategy {
-	desc = "base guiding strategy";
+	static desc = "base guiding strategy";
 	strategies = [];
 	condition = false;
 
 	// condition must return true to activate this guiding strategy
 	function Condition() {
-		return false;
+		return condition;
 	}
 
 	function DoAction(action, arg=null) {
@@ -28,12 +28,15 @@ class GuidingStrategy {
 				} else if (action == "Wake") {
 					strat.Wake();
 					strat.RunTasks();
+				} else if (action == "Quarterly") {
+					strat.Quarterly();
+					strat.RunTasks();
 				} else if (action == "Event") {
 					strat.Event(arg);
 					strat.RunTasks();
 				}
 			} catch (e) {
-				Error("exception thrown");
+				Error("exception thrown:", e);
 			}
 		}
 	}
@@ -48,6 +51,9 @@ class GuidingStrategy {
 	}
 	function Wake() {
 		DoAction("Wake");
+	}
+	function Quarterly() {
+		DoAction("Quarterly");
 	}
 	function Event(e) {
 		DoAction("Event", e);
